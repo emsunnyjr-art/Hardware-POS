@@ -32,6 +32,11 @@ Products → Photos: steps through every item without a photo. "Save & go to nex
 - iPhone/iPad: Search web → long-press a photo → Copy → back to the app → Paste image → saved, next item shows.
 - Also works: Cmd/Ctrl+V, pasting an image link, dragging an image onto the box, or tapping the box to use the camera.
 
+Background:
+- Quick clean (automatic, ~0.05 s): plain/light backgrounds turn pure white; item is cropped and centered in a square. Toggle: "Clean background to white automatically".
+- Busy background: app warns and waits → tap "AI remove background" (first time downloads ~40 MB AI model, then a few seconds per photo). Product form has an AI button too.
+- AI uses IMG.LY background-removal (AGPL). Fine for own use; if reselling, keep the app source public or buy IMG.LY's commercial license.
+
 ## SKU codes
 Format: CATEGORY-TYPE-SIZE-VARIANT, e.g. CM-CEM-40KG, LP-MPW-12MM, AD-CC-1L-RUG.
 - Blank SKU on save = auto-generated. Product form → Auto button rebuilds it.

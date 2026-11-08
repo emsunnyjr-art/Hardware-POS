@@ -425,6 +425,34 @@ function showReceipt(s,fresh){const m=modal(`<h3>${fresh?'Sale complete ✓':'Re
  m.querySelector('#rc_sh').onclick=async()=>{const txt=`${S.settings.storeName}\n${s.no} ${fmtDT(s.ts)}\n`+s.lines.map(l=>`${l.name}  ${fmtQty(l.qty)} x ${money(l.price)} = ${money(l.qty*l.price)}`).join('\n')+`\nTOTAL ₱${money(s.total)} (${s.pay})`;try{if(navigator.share)await navigator.share({title:'Receipt '+s.no,text:txt});else{await navigator.clipboard.writeText(txt);toast('Receipt copied','ok')}}catch(e){}};
  m.onclose=()=>{if(S.view==='sell'&&!isTouch())$('#q')?.focus()}}
 
+/* ========= PHOTO CLEAN (quick + AI) ========= */
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('Image could not be read'));i.src=src})}
+async function toImg(f){if(typeof f==='string')return loadImg(f);const u=URL.createObjectURL(f);try{return await loadImg(u)}finally{setTimeout(()=>URL.revokeObjectURL(u),2000)}}
+function squareFit(c,box,out=500){const[x0,y0,x1,y1]=box,w=x1-x0+1,h=y1-y0+1,side=Math.max(w,h)*1.12,o=document.createElement('canvas');o.width=o.height=out;const x=o.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,out,out);const k=out/side;x.imageSmoothingQuality='high';x.drawImage(c,x0,y0,w,h,(out-w*k)/2,(out-h*k)/2,w*k,h*k);return o}
+function quickClean(c){const x=c.getContext('2d'),W=c.width,H=c.height,d=x.getImageData(0,0,W,H),p=d.data,N=W*H;
+ const bs=[];const sm=(i,j)=>{const k=(j*W+i)*4;bs.push([p[k],p[k+1],p[k+2]])};for(let i=0;i<W;i+=2){sm(i,0);sm(i,H-1)}for(let j=0;j<H;j+=2){sm(0,j);sm(W-1,j)}
+ const med=n=>{const a=bs.map(b=>b[n]).sort((a,b)=>a-b);return a[a.length>>1]},bg=[med(0),med(1),med(2)],TOL=40;
+ const near=(r,g,b)=>Math.abs(r-bg[0])<TOL&&Math.abs(g-bg[1])<TOL&&Math.abs(b-bg[2])<TOL;
+ if(bs.filter(b=>near(b[0],b[1],b[2])).length/bs.length<.8)return null;
+ const seen=new Uint8Array(N);let st=new Int32Array(N+8),sp=0;const add=i=>{if(!seen[i]){const k=i*4;if(near(p[k],p[k+1],p[k+2])){seen[i]=1;if(sp>=st.length){const n2=new Int32Array(st.length*2);n2.set(st);st=n2}st[sp++]=i}}};
+ for(let i=0;i<W;i++){add(i);add((H-1)*W+i)}for(let j=0;j<H;j++){add(j*W);add(j*W+W-1)}
+ while(sp){const i=st[--sp],cx=i%W;if(cx>0)add(i-1);if(cx<W-1)add(i+1);if(i>=W)add(i-W);if(i<N-W)add(i+W)}
+ let x0=W,y0=H,x1=-1,y1=-1;for(let i=0;i<N;i++){if(seen[i]){const k=i*4;p[k]=p[k+1]=p[k+2]=255}else{const cx=i%W,cy=(i/W)|0;if(cx<x0)x0=cx;if(cx>x1)x1=cx;if(cy<y0)y0=cy;if(cy>y1)y1=cy}}
+ if(x1<0||(x1-x0+1)*(y1-y0+1)<N*.01)return null;x.putImageData(d,0,0);return[x0,y0,x1,y1]}
+async function processPhoto(f,clean){const im=await toImg(f);let w=im.naturalWidth,h=im.naturalHeight;const k=Math.min(1,700/Math.max(w,h));w=Math.max(1,Math.round(w*k));h=Math.max(1,Math.round(h*k));
+ const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);
+ if(clean){const box=quickClean(c);if(box)return{url:squareFit(c,box).toDataURL('image/jpeg',.84),cleaned:true}}
+ return{url:squareFit(c,[0,0,w-1,h-1]).toDataURL('image/jpeg',.82),cleaned:false}}
+let bgLib=null;
+async function aiRemoveBg(src,onProg){if(!navigator.onLine)throw new Error('AI needs internet');
+ if(!bgLib)bgLib=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
+ const blob=typeof src==='string'?await (await fetch(src)).blob():src;const prog={};
+ const out=await bgLib.removeBackground(blob,{model:'isnet_quint8',output:{format:'image/png'},progress:(key,cur,tot)=>{if(tot){prog[key]=[cur,tot];const a=Object.values(prog).reduce((s,v)=>[s[0]+v[0],s[1]+v[1]],[0,0]);onProg&&onProg(Math.round(a[0]/a[1]*100))}}});
+ const im=await toImg(out),W=im.naturalWidth,H=im.naturalHeight,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.drawImage(im,0,0);
+ const d=x.getImageData(0,0,W,H).data;let x0=W,y0=H,x1=-1,y1=-1;for(let j=0;j<H;j++)for(let i=0;i<W;i++)if(d[(j*W+i)*4+3]>24){if(i<x0)x0=i;if(i>x1)x1=i;if(j<y0)y0=j;if(j>y1)y1=j}
+ if(x1<0)throw new Error('No product found in photo');return squareFit(c,[x0,y0,x1,y1]).toDataURL('image/jpeg',.86)}
+const cleanOn=()=>CFG.photoClean!==false;
+
 /* ========= PHOTO FINDER ========= */
 let pasteTarget=null,lastClipSig='';
 const isImgUrl=t=>/^(https?:\/\/\S+|data:image\/)/i.test(t||'');
@@ -455,17 +483,24 @@ function photoQueue(){const all=activeProducts();if(!all.length)return toast('No
  m.onclose=()=>{pasteTarget=null;closeImgWin();window.removeEventListener('focus',onFocus);if(S.view==='products')renderPList()};
  clipGranted().then(async g=>{if(g){const c=await readClip(true);if(c)lastClipSig=c.sig}});
  const saveCur=async()=>{const p=list[i];if(!img||!p||busy)return;busy=true;const id='ph_'+uid();const fresh=S.products.get(p.id)||p;await saveMany([{kind:'photo',data:{id,img}},{kind:'product',data:{...fresh,photoId:id}}]);list[i]={...fresh,photoId:id};closeImgWin();toast('Saved: '+p.name,'ok');i++;busy=false;draw()};
- const set=async f=>{if(!f||busy)return;img=await compressImage(f,500,.78);const pv=m.querySelector('#pq_pv');if(!pv)return;pv.innerHTML=`<img src="${img}">`;m.querySelector('#pq_ok').disabled=false;if(CFG.pqAuto)setTimeout(saveCur,500)};
+ const msg=(t,c='')=>{const e=m.querySelector('#pq_msg');if(e){e.textContent=t;e.style.color=c}};
+ const show=u=>{img=u;const pv=m.querySelector('#pq_pv');if(!pv)return false;pv.innerHTML=`<img src="${img}">`;m.querySelector('#pq_ok').disabled=false;m.querySelector('#pq_ai').disabled=false;return true};
+ const set=async f=>{if(!f||busy)return;let r;try{r=await processPhoto(f,cleanOn())}catch(e){return toast(e.message,'bad')}if(!show(r.url))return;
+  if(cleanOn()&&!r.cleaned){msg('Busy background — tap AI remove background, or Save & next to keep as is.','var(--warn)');return}
+  msg(r.cleaned?'Background cleaned ✓':'','var(--ok)');if(CFG.pqAuto)setTimeout(saveCur,500)};
+ const runAI=async()=>{const src=img||photoURL(list[i]?.photoId);if(!src)return toast('Paste a photo first','warn');const b=m.querySelector('#pq_ai');b.disabled=true;busy=true;const t0=Date.now();
+  try{msg(bgLib?'AI removing background…':'Loading AI (first time only, ~40 MB)…');const u=await aiRemoveBg(src,pc=>msg('Loading AI model… '+pc+'%'));busy=false;show(u);msg('AI background removed ✓ ('+((Date.now()-t0)/1000).toFixed(1)+' s)','var(--ok)');if(CFG.pqAuto)setTimeout(saveCur,700)}
+  catch(e){busy=false;b.disabled=false;msg('AI failed: '+e.message,'var(--bad)')}};
  const draw=()=>{const p=list[i];if(!p){closeModal(m);toast('All done','ok');return}img=null;const cur=photoURL(p.photoId);
   m.querySelector('#pq_b').innerHTML=`<p class="small mute">${i+1} of ${list.length}${miss.length?' without photo':''}</p>
   <div class="pform"><label class="photo" id="pq_ph"><span id="pq_pv" style="display:contents">${cur?`<img src="${cur}">`:ic('camera',28)+'<span class="small">Camera / file</span>'}</span><input type="file" accept="image/*" id="pq_f" hidden></label>
-  <div><b style="font-size:17px">${esc(p.name)}</b><p class="skuprev" style="margin:4px 0 12px">${esc(p.sku||'')} · ${esc(p.cat||'')}</p><div class="row" style="flex-wrap:wrap"><button class="btn primary" id="pq_web">${ic('search',16)} Search web</button><button class="btn" id="pq_paste">Paste image</button></div>
+  <div><b style="font-size:17px">${esc(p.name)}</b><p class="skuprev" style="margin:4px 0 12px">${esc(p.sku||'')} · ${esc(p.cat||'')}</p><div class="row" style="flex-wrap:wrap"><button class="btn primary" id="pq_web">${ic('search',16)} Search web</button><button class="btn" id="pq_paste">Paste image</button><button class="btn" id="pq_ai" ${cur?'':'disabled'}>${ic('spark',16)} AI remove background</button></div><p class="small b" id="pq_msg" style="min-height:18px;margin:8px 0 0"></p>
   <p class="small mute" style="margin-top:10px">${isTouch()?'Search web → long-press a photo → <b>Copy</b> → come back → <b>Paste image</b>.':'Search web → right-click a photo → <b>Copy Image</b> → click this window (or press Cmd/Ctrl+V). It saves, Google closes, next item shows.<br><small>Chrome/Edge: click Paste image once and Allow — then just clicking back is enough.</small>'}</p>
-  <label class="chk"><input type="checkbox" id="pq_auto" ${CFG.pqAuto?'checked':''}> Save &amp; go to next item automatically</label></div></div>
+  <label class="chk"><input type="checkbox" id="pq_auto" ${CFG.pqAuto?'checked':''}> Save &amp; go to next item automatically</label><label class="chk"><input type="checkbox" id="pq_clean" ${cleanOn()?'checked':''}> Clean background to white automatically</label></div></div>
   <div class="row end"><button class="btn" data-close>Close</button><button class="btn" id="pq_prev" ${i?'':'disabled'}>Back</button><button class="btn" id="pq_skip">Skip</button><button class="btn primary" id="pq_ok" disabled>Save &amp; next</button></div>`;
   const q=s=>m.querySelector(s);q('#pq_f').onchange=e=>set(e.target.files[0]);dropZone(q('#pq_ph'),set);pasteTarget=set;
   q('#pq_web').onclick=()=>webSearch(p.name);q('#pq_paste').onclick=async()=>set(await clipImage());
-  q('#pq_auto').onchange=e=>{CFG.pqAuto=e.target.checked;saveCfg()};
+  q('#pq_auto').onchange=e=>{CFG.pqAuto=e.target.checked;saveCfg()};q('#pq_clean').onchange=e=>{CFG.photoClean=e.target.checked;saveCfg()};q('#pq_ai').onclick=runAI;
   q('#pq_skip').onclick=()=>{i++;draw()};q('#pq_prev').onclick=()=>{i--;draw()};q('#pq_ok').onclick=saveCur};
  draw()}
 
@@ -480,7 +515,7 @@ async function scanFind(){const c=await scanCode();if(!c)return;const p=findByCo
 function editProduct(id,preset={}){if(!isOwner())return toast('Owner only','bad');const isNew=!id;const p=id?{...S.products.get(id)}:{id:uid(),name:'',cat:'',unit:'pc',sku:'',barcode:'',cost:'',price:'',satPrice:'',reorder:'',reserveOnly:false,photoId:null,active:true,...preset};
  let photo=p.photoId?PHOTO.get(p.photoId):null,photoNew=null;const cats=[...new Set([...catList().map(c=>c[1]),...activeProducts().map(x=>x.cat).filter(Boolean)])];
  const m=modal(`<h3>${isNew?'Add product':'Edit product'}</h3>
- <div class="pform"><div><label class="photo" id="ep_ph"><span id="ep_pv" style="display:contents">${photo?`<img src="${photo}">`:`${ic('camera',28)}<span class="small">Photo</span>`}</span><input type="file" accept="image/*" id="ep_file" hidden></label><div class="row" style="gap:4px;margin-top:6px"><button class="btn sm grow" id="ep_web" title="Search the web for a photo">Web</button><button class="btn sm grow" id="ep_paste" title="Paste a copied image">Paste</button></div></div>
+ <div class="pform"><div><label class="photo" id="ep_ph"><span id="ep_pv" style="display:contents">${photo?`<img src="${photo}">`:`${ic('camera',28)}<span class="small">Photo</span>`}</span><input type="file" accept="image/*" id="ep_file" hidden></label><div class="row" style="gap:4px;margin-top:6px"><button class="btn sm grow" id="ep_web" title="Search the web for a photo">Web</button><button class="btn sm grow" id="ep_paste" title="Paste a copied image">Paste</button><button class="btn sm grow" id="ep_ai" title="AI remove background">AI</button></div></div>
  <div><label>Name<input id="ep_name" value="${esc(p.name)}" placeholder="e.g. Marine Plywood 3/4"></label><div class="g2"><label>Category<input id="ep_cat" list="ep_cl" value="${esc(p.cat)}"></label><label>Unit<input id="ep_unit" list="ep_ul" value="${esc(p.unit)}"></label></div></div></div>
  <datalist id="ep_cl">${cats.map(c=>`<option value="${esc(c)}">${esc(catCode(c))}</option>`).join('')}</datalist><datalist id="ep_ul">${['pc','box','bag','kg','m','ft','roll','sheet','length','set','pair','gal','L','cu.m'].map(u=>`<option value="${u}">`).join('')}</datalist>
  <div class="g2"><label>SKU / item code<div class="inrow"><input id="ep_sku" value="${esc(p.sku)}" style="text-transform:uppercase"><button class="btn sm" id="ep_auto" title="Build SKU from category + name">Auto</button></div></label><label>Barcode<div class="inrow"><input id="ep_bc" value="${esc(p.barcode)}" inputmode="numeric"><button class="btn icon" id="ep_scan" title="Scan">${ic('scan',18)}</button><button class="btn sm" id="ep_gen" title="Generate in-store code">Gen</button></div></label></div>
@@ -494,7 +529,8 @@ function editProduct(id,preset={}){if(!isOwner())return toast('Owner only','bad'
  ['#ep_cost','#ep_price','#ep_sat'].forEach(s=>g(s).oninput=upd);upd();
  g('#ep_name').addEventListener('change',()=>{if(!g('#ep_cat').value.trim()){const c=guessCat(g('#ep_name').value);if(c){g('#ep_cat').value=c;skuPrev()}}});const skuPrev=()=>{g('#ep_sku').placeholder=g('#ep_name').value.trim()?'Auto: '+autoSku({name:g('#ep_name').value,cat:g('#ep_cat').value},p.id):'Blank = auto'};['#ep_name','#ep_cat'].forEach(s=>g(s).addEventListener('input',skuPrev));skuPrev();
  g('#ep_auto').onclick=()=>{if(!g('#ep_name').value.trim())return toast('Enter the name first','warn');g('#ep_sku').value=autoSku({name:g('#ep_name').value,cat:g('#ep_cat').value},p.id)};
- const setPh=async f=>{if(!f)return;photoNew=await compressImage(f,500,.78);g('#ep_pv').innerHTML=`<img src="${photoNew}">`;closeImgWin()};
+ const setPh=async f=>{if(!f)return;try{const r=await processPhoto(f,cleanOn());photoNew=r.url;g('#ep_pv').innerHTML=`<img src="${photoNew}">`;closeImgWin();if(cleanOn()&&!r.cleaned)toast('Busy background — tap AI to remove it','warn')}catch(e){toast(e.message,'bad')}};
+ g('#ep_ai').onclick=async()=>{const src=photoNew||photo;if(!src)return toast('Add a photo first','warn');const b=g('#ep_ai');b.disabled=true;b.textContent='AI…';try{photoNew=await aiRemoveBg(src,pc=>{b.textContent=pc+'%'});g('#ep_pv').innerHTML=`<img src="${photoNew}">`;toast('Background removed','ok')}catch(e){toast('AI failed: '+e.message,'bad')}b.disabled=false;b.textContent='AI'};
  g('#ep_file').onchange=e=>setPh(e.target.files[0]);dropZone(g('#ep_ph'),setPh);pasteTarget=setPh;m.onclose=()=>{pasteTarget=null;closeImgWin()};
  g('#ep_web').onclick=()=>{const n=g('#ep_name').value.trim();if(!n)return toast('Enter the name first','warn');webSearch(n)};g('#ep_paste').onclick=async()=>setPh(await clipImage());
  g('#ep_scan').onclick=async()=>{const c=await scanCode();if(c)g('#ep_bc').value=c};g('#ep_gen').onclick=()=>{g('#ep_bc').value=genBarcode()};
