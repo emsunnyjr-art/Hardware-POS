@@ -32,6 +32,11 @@ Stock In → snap supplier receipt → lines auto-filled and matched → review 
 - Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
 - Every product must have a cost. Products → "Missing cost" filter finds gaps.
 
+## Bulk price (roll / box / sack)
+- Product → Bulk unit (e.g. roll), Sell units per bulk unit (e.g. 150 m), Bulk price (e.g. 4,700).
+- Sell screen: tap "by roll ₱4,700" under the cart line to switch; stock drops by 150 m. Tap again to go back to per-meter.
+- Bulk selling needs the pack size set; products list shows "set pack" until it is.
+
 ## Brands
 - Product form → Brand (auto-guessed from the name). AI reads brand from receipts for new items.
 - Brand shows on sell tiles, is searchable, adds a brand code to auto-SKU (e.g. PT-ENM-1L-RED-BOY).
