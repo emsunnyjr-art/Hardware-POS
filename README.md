@@ -26,6 +26,19 @@ Stock In → snap supplier receipt → lines auto-filled and matched → review 
 - Products → Labels → print barcode/QR price stickers (50×30 mm).
 - Inventory → Transfer to move stock to satellites (satellite price auto +15%, editable).
 
+## SKU codes
+Format: CATEGORY-TYPE-SIZE-VARIANT, e.g. CM-CEM-40KG, LP-MPW-12MM, AD-CC-1L-RUG.
+- Blank SKU on save = auto-generated. Product form → Auto button rebuilds it.
+- Products → Auto-SKU → Fill missing / Redo all.
+- Category codes: Settings → Categories & SKU codes (CODE = Name, one per line).
+- Blank category is guessed from the item name (plywood → LP, solvent → AD, etc.).
+
+## Discounts
+- Per item: tap the line in the cart → Discount on this item (% or ₱) → quick 5/10/15/20%.
+- Whole sale: Sale discount + (₱ or %), applied after item discounts.
+- Cashier limit: Settings → Max cashier discount % (default 10). Above it, owner PIN is required at payment; approver is recorded.
+- Receipt shows each "Less", sale discount and "You saved". Reports → Discounts given + by cashier.
+
 ## Hardware
 - Any USB/Bluetooth barcode scanner (keyboard mode) — just scan on the Sell screen.
 - Phone/tablet camera scans barcodes and QR codes.
