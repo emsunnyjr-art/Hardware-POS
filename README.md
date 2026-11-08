@@ -31,6 +31,11 @@ Stock In → snap supplier receipt → lines auto-filled and matched → review 
 - Average cost (moving weighted average) = cost used for profit and stock value. Updated on every delivery.
 - Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
 - Every product must have a cost. Products → "Missing cost" filter finds gaps.
+
+## Brands
+- Product form → Brand (auto-guessed from the name). AI reads brand from receipts for new items.
+- Brand shows on sell tiles, is searchable, adds a brand code to auto-SKU (e.g. PT-ENM-1L-RED-BOY).
+- Products → brand dropdown filter (incl. "No brand"). Reports → Top brands. CSV has a brand column.
 - Product → Cost & price history: every delivery cost, cost per supplier (⭐ cheapest), every price change with who/when/why.
 
 ## Price review
