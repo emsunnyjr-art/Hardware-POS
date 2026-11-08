@@ -20,6 +20,26 @@ Runs in any browser: iPhone, iPad/Android tablet, Mac, Windows. Works offline; s
 aistudio.google.com → Get API key → App → Settings → Receipt reader → paste.
 Stock In → snap supplier receipt → lines auto-filled and matched → review → Save (stock + cost updated).
 
+## Receiving deliveries (Stock In)
+1. Stock In → Receive delivery → Take photo of receipt / DR → AI reads supplier, invoice no., date and every line.
+2. Each line is matched to your products (✓ SKU) or marked NEW. Wrong match → "not this item?". The app remembers each supplier's wording for next time.
+3. Bulk: Buy unit + pack qty, e.g. 2 box × 100 pc = 200 pc in stock; 1 roll × 150 m = 150 m. Cost per selling unit is calculated.
+4. Sell price blank = decide later. "Fill suggested prices" fills blanks.
+5. Receive → stock added, costs updated, receipt photo kept. Items needing a price go to Price review.
+
+## Costing (retail standard)
+- Average cost (moving weighted average) = cost used for profit and stock value. Updated on every delivery.
+- Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
+- Every product must have a cost. Products → "Missing cost" filter finds gaps.
+- Product → Cost & price history: every delivery cost, cost per supplier (⭐ cheapest), every price change with who/when/why.
+
+## Price review
+Products / Stock In → Price review: items with no price + items whose cost changed.
+- New item: suggested = cost + target markup (Settings), rounded (₱0.25 / ₱1 / ₱5 / ₱10 steps).
+- Cost up: suggested keeps your current markup. Cost down: suggested keeps current price.
+- "Keep" clears the flag without changing price. Blank = decide later.
+- Items without a price cannot be sold by cashiers; owner is asked to set a price at the counter.
+
 ## 4. Load your idle main-branch stock
 - Fastest: Products → Import CSV (download template; `stock` column goes into the selected branch).
 - Or Products → Add → photo + Gen barcode → Save + next.
