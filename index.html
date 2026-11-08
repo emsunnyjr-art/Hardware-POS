@@ -434,7 +434,11 @@ async function blobFromUrl(u){u=String(u||'').trim();try{if(/^data:image\//i.tes
 document.addEventListener('paste',e=>{if(!pasteTarget)return;const items=[...(e.clipboardData?.items||[])];const it=items.find(x=>x.type.startsWith('image/'));
  if(it){e.preventDefault();const f=it.getAsFile();lastClipSig='b'+f.size;pasteTarget(f);return}
  const tx=(e.clipboardData?.getData('text')||'').trim();if(isImgUrl(tx)&&!e.target.closest?.('input,textarea')){e.preventDefault();lastClipSig='u'+tx.slice(0,300);blobFromUrl(tx).then(b=>b&&pasteTarget(b))}});
-function webSearch(name){const q=encodeURIComponent(String(name||'').replace(/["”]/g,' inch ')+' product');const w=window.open('https://www.google.com/search?tbm=isch&q='+q,'tpos_img');try{if(w)w.opener=null}catch(e){}}
+let imgWin=null;
+function webSearch(name){const q=encodeURIComponent(String(name||'').replace(/["”]/g,' inch ')+' product');const url='https://www.google.com/search?tbm=isch&q='+q;let feat='';
+ if(!isTouch()){const W=screen.availWidth||1280,H=screen.availHeight||800,w=Math.round(Math.min(1000,Math.max(560,W*.5))),h=Math.round(H*.9),L=(screen.availLeft||0)+W-w,T=(screen.availTop||0)+Math.round(H*.05);feat=`popup,width=${w},height=${h},left=${L},top=${T}`}
+ imgWin=window.open(url,'tpos_img',feat);try{imgWin&&imgWin.focus()}catch(e){}}
+function closeImgWin(){try{if(imgWin&&!imgWin.closed)imgWin.close()}catch(e){}imgWin=null}
 async function readClip(silent){try{if(!navigator.clipboard?.read)throw 0;const items=await navigator.clipboard.read();
   for(const it of items){const t=it.types.find(x=>x.startsWith('image/'));if(t){const bl=await it.getType(t);return{blob:bl,sig:'b'+bl.size}}}
   for(const it of items){if(it.types.includes('text/plain')){const tx=(await (await it.getType('text/plain')).text()).trim();if(isImgUrl(tx))return{url:tx,sig:'u'+tx.slice(0,300)}}}
@@ -448,15 +452,15 @@ function photoQueue(){const all=activeProducts();if(!all.length)return toast('No
  const m=modal(`<h3>Product photos</h3><div id="pq_b"></div>`,'wide',{lock:true});
  const onFocus=()=>{if(!CFG.pqAuto||busy)return;setTimeout(async()=>{if(!(await clipGranted()))return;const c=await readClip(true);if(!c||c.sig===lastClipSig)return;lastClipSig=c.sig;const bl=c.blob||await blobFromUrl(c.url);if(bl)set(bl)},300)};
  window.addEventListener('focus',onFocus);
- m.onclose=()=>{pasteTarget=null;window.removeEventListener('focus',onFocus);if(S.view==='products')renderPList()};
+ m.onclose=()=>{pasteTarget=null;closeImgWin();window.removeEventListener('focus',onFocus);if(S.view==='products')renderPList()};
  clipGranted().then(async g=>{if(g){const c=await readClip(true);if(c)lastClipSig=c.sig}});
- const saveCur=async()=>{const p=list[i];if(!img||!p||busy)return;busy=true;const id='ph_'+uid();const fresh=S.products.get(p.id)||p;await saveMany([{kind:'photo',data:{id,img}},{kind:'product',data:{...fresh,photoId:id}}]);list[i]={...fresh,photoId:id};toast('Saved: '+p.name,'ok');i++;busy=false;draw()};
+ const saveCur=async()=>{const p=list[i];if(!img||!p||busy)return;busy=true;const id='ph_'+uid();const fresh=S.products.get(p.id)||p;await saveMany([{kind:'photo',data:{id,img}},{kind:'product',data:{...fresh,photoId:id}}]);list[i]={...fresh,photoId:id};closeImgWin();toast('Saved: '+p.name,'ok');i++;busy=false;draw()};
  const set=async f=>{if(!f||busy)return;img=await compressImage(f,500,.78);const pv=m.querySelector('#pq_pv');if(!pv)return;pv.innerHTML=`<img src="${img}">`;m.querySelector('#pq_ok').disabled=false;if(CFG.pqAuto)setTimeout(saveCur,500)};
  const draw=()=>{const p=list[i];if(!p){closeModal(m);toast('All done','ok');return}img=null;const cur=photoURL(p.photoId);
   m.querySelector('#pq_b').innerHTML=`<p class="small mute">${i+1} of ${list.length}${miss.length?' without photo':''}</p>
   <div class="pform"><label class="photo" id="pq_ph"><span id="pq_pv" style="display:contents">${cur?`<img src="${cur}">`:ic('camera',28)+'<span class="small">Camera / file</span>'}</span><input type="file" accept="image/*" id="pq_f" hidden></label>
   <div><b style="font-size:17px">${esc(p.name)}</b><p class="skuprev" style="margin:4px 0 12px">${esc(p.sku||'')} · ${esc(p.cat||'')}</p><div class="row" style="flex-wrap:wrap"><button class="btn primary" id="pq_web">${ic('search',16)} Search web</button><button class="btn" id="pq_paste">Paste image</button></div>
-  <p class="small mute" style="margin-top:10px">${isTouch()?'Search web → long-press a photo → <b>Copy</b> → come back → <b>Paste image</b>.':'Search web → right-click a photo → <b>Copy image</b> → click back here. It saves by itself.<br><small>First time: click Paste image once and Allow clipboard.</small>'}</p>
+  <p class="small mute" style="margin-top:10px">${isTouch()?'Search web → long-press a photo → <b>Copy</b> → come back → <b>Paste image</b>.':'Search web → right-click a photo → <b>Copy Image</b> → click this window (or press Cmd/Ctrl+V). It saves, Google closes, next item shows.<br><small>Chrome/Edge: click Paste image once and Allow — then just clicking back is enough.</small>'}</p>
   <label class="chk"><input type="checkbox" id="pq_auto" ${CFG.pqAuto?'checked':''}> Save &amp; go to next item automatically</label></div></div>
   <div class="row end"><button class="btn" data-close>Close</button><button class="btn" id="pq_prev" ${i?'':'disabled'}>Back</button><button class="btn" id="pq_skip">Skip</button><button class="btn primary" id="pq_ok" disabled>Save &amp; next</button></div>`;
   const q=s=>m.querySelector(s);q('#pq_f').onchange=e=>set(e.target.files[0]);dropZone(q('#pq_ph'),set);pasteTarget=set;
@@ -490,8 +494,8 @@ function editProduct(id,preset={}){if(!isOwner())return toast('Owner only','bad'
  ['#ep_cost','#ep_price','#ep_sat'].forEach(s=>g(s).oninput=upd);upd();
  g('#ep_name').addEventListener('change',()=>{if(!g('#ep_cat').value.trim()){const c=guessCat(g('#ep_name').value);if(c){g('#ep_cat').value=c;skuPrev()}}});const skuPrev=()=>{g('#ep_sku').placeholder=g('#ep_name').value.trim()?'Auto: '+autoSku({name:g('#ep_name').value,cat:g('#ep_cat').value},p.id):'Blank = auto'};['#ep_name','#ep_cat'].forEach(s=>g(s).addEventListener('input',skuPrev));skuPrev();
  g('#ep_auto').onclick=()=>{if(!g('#ep_name').value.trim())return toast('Enter the name first','warn');g('#ep_sku').value=autoSku({name:g('#ep_name').value,cat:g('#ep_cat').value},p.id)};
- const setPh=async f=>{if(!f)return;photoNew=await compressImage(f,500,.78);g('#ep_pv').innerHTML=`<img src="${photoNew}">`};
- g('#ep_file').onchange=e=>setPh(e.target.files[0]);dropZone(g('#ep_ph'),setPh);pasteTarget=setPh;m.onclose=()=>{pasteTarget=null};
+ const setPh=async f=>{if(!f)return;photoNew=await compressImage(f,500,.78);g('#ep_pv').innerHTML=`<img src="${photoNew}">`;closeImgWin()};
+ g('#ep_file').onchange=e=>setPh(e.target.files[0]);dropZone(g('#ep_ph'),setPh);pasteTarget=setPh;m.onclose=()=>{pasteTarget=null;closeImgWin()};
  g('#ep_web').onclick=()=>{const n=g('#ep_name').value.trim();if(!n)return toast('Enter the name first','warn');webSearch(n)};g('#ep_paste').onclick=async()=>setPh(await clipImage());
  g('#ep_scan').onclick=async()=>{const c=await scanCode();if(c)g('#ep_bc').value=c};g('#ep_gen').onclick=()=>{g('#ep_bc').value=genBarcode()};
  if(!isNew){g('#ep_del').onclick=async()=>{if(await confirmBox('Archive '+p.name+'? It will be hidden from selling.','Archive',true)){await save('product',{...p,active:false});closeModal(m);go(S.view)}};g('#ep_hist').onclick=()=>moveLog(p.id)}

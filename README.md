@@ -28,7 +28,7 @@ Stock In → snap supplier receipt → lines auto-filled and matched → review 
 
 ## Product photos
 Products → Photos: steps through every item without a photo. "Save & go to next automatically" is on by default.
-- Computer (Chrome/Edge): Search web → right-click a photo → Copy image → click back to the app tab → saved, next item shows. First time: click Paste image once → Allow.
+- Mac/PC: Search web opens Google in a side window → right-click a photo → Copy Image → click the app (Chrome/Edge) or press Cmd/Ctrl+V (Safari) → saved, Google window closes, next item shows. Chrome/Edge first time: click Paste image once → Allow.
 - iPhone/iPad: Search web → long-press a photo → Copy → back to the app → Paste image → saved, next item shows.
 - Also works: Cmd/Ctrl+V, pasting an image link, dragging an image onto the box, or tapping the box to use the camera.
 
