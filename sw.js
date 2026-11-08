@@ -1,5 +1,5 @@
 // Tindero POS service worker: app works offline after first load.
-const CACHE = 'tindero-v6';
+const CACHE = 'tindero-v7';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const CDN = ['unpkg.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'];
 

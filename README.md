@@ -45,7 +45,7 @@ Format: CATEGORY-TYPE-SIZE-VARIANT, e.g. CM-CEM-40KG, LP-MPW-12MM, AD-CC-1L-RUG.
 - Blank category is guessed from the item name (plywood → LP, solvent → AD, etc.).
 
 ## Discounts
-- Per item: tap the line in the cart → Discount on this item (% or ₱) → quick 5/10/15/20%.
+- Per item: tap the line in the cart → Discount on this item → % off, ₱ off each piece, or ₱ off whole line → quick 5/10/15/20%. Preview shows the peso discount before Update.
 - Whole sale: Sale discount + (₱ or %), applied after item discounts.
 - Cashier limit: Settings → Max cashier discount % (default 10). Above it, owner PIN is required at payment; approver is recorded.
 - Receipt shows each "Less", sale discount and "You saved". Reports → Discounts given + by cashier.
