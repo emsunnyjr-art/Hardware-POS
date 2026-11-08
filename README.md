@@ -26,6 +26,12 @@ Stock In → snap supplier receipt → lines auto-filled and matched → review 
 - Products → Labels → print barcode/QR price stickers (50×30 mm).
 - Inventory → Transfer to move stock to satellites (satellite price auto +15%, editable).
 
+## Product photos
+Products → Photos: steps through every item without a photo.
+Search web → long-press / right-click a clear photo → Copy image → back to app → Paste image (or Cmd/Ctrl+V) → Save & next.
+Also: tap the photo box to snap your own; on a computer drag an image file onto the box.
+Product form has Web / Paste buttons under the photo too.
+
 ## SKU codes
 Format: CATEGORY-TYPE-SIZE-VARIANT, e.g. CM-CEM-40KG, LP-MPW-12MM, AD-CC-1L-RUG.
 - Blank SKU on save = auto-generated. Product form → Auto button rebuilds it.
