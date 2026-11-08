@@ -32,6 +32,13 @@ Stock In → snap supplier receipt → lines auto-filled and matched → review 
 - Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
 - Every product must have a cost. Products → "Missing cost" filter finds gaps.
 
+## Close shift / End of day
+- Close (bottom bar / sidebar) — cashiers and owner. Covers sales since the branch's last close (or start of today).
+- Enter starting cash (float), count bills/coins by denomination, add cash paid out → Expected vs Counted → BALANCED / OVER / SHORT.
+- Close shift & make report → printable end-of-shift report (58/80 mm or A4) + Share to Viber/Messenger.
+- Past closings listed on the Close screen; owner sees them under Reports → Shift closings.
+- Reports → Day report: one-page sales report for the selected period and branch (no cash count).
+
 ## Bulk price (roll / box / sack)
 - Product → Bulk unit (e.g. roll), Sell units per bulk unit (e.g. 150 m), Bulk price (e.g. 4,700).
 - Sell screen: tap "by roll ₱4,700" under the cart line to switch; stock drops by 150 m. Tap again to go back to per-meter.
