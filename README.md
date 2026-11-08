@@ -27,10 +27,10 @@ Stock In → snap supplier receipt → lines auto-filled and matched → review 
 - Inventory → Transfer to move stock to satellites (satellite price auto +15%, editable).
 
 ## Product photos
-Products → Photos: steps through every item without a photo.
-Search web → long-press / right-click a clear photo → Copy image → back to app → Paste image (or Cmd/Ctrl+V) → Save & next.
-Also: tap the photo box to snap your own; on a computer drag an image file onto the box.
-Product form has Web / Paste buttons under the photo too.
+Products → Photos: steps through every item without a photo. "Save & go to next automatically" is on by default.
+- Computer (Chrome/Edge): Search web → right-click a photo → Copy image → click back to the app tab → saved, next item shows. First time: click Paste image once → Allow.
+- iPhone/iPad: Search web → long-press a photo → Copy → back to the app → Paste image → saved, next item shows.
+- Also works: Cmd/Ctrl+V, pasting an image link, dragging an image onto the box, or tapping the box to use the camera.
 
 ## SKU codes
 Format: CATEGORY-TYPE-SIZE-VARIANT, e.g. CM-CEM-40KG, LP-MPW-12MM, AD-CC-1L-RUG.

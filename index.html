@@ -426,24 +426,43 @@ function showReceipt(s,fresh){const m=modal(`<h3>${fresh?'Sale complete ✓':'Re
  m.onclose=()=>{if(S.view==='sell'&&!isTouch())$('#q')?.focus()}}
 
 /* ========= PHOTO FINDER ========= */
-let pasteTarget=null;
-document.addEventListener('paste',e=>{if(!pasteTarget)return;const it=[...(e.clipboardData?.items||[])].find(x=>x.type.startsWith('image/'));if(it){e.preventDefault();pasteTarget(it.getAsFile())}});
-function webSearch(name){const q=encodeURIComponent(String(name||'').replace(/["”]/g,' inch ')+' product');window.open('https://www.google.com/search?tbm=isch&q='+q,'_blank','noopener')}
-async function clipImage(){try{if(!navigator.clipboard?.read)throw 0;const items=await navigator.clipboard.read();for(const it of items){const t=it.types.find(x=>x.startsWith('image/'));if(t)return await it.getType(t)}toast('No image copied — long-press / right-click an image → Copy image','warn')}catch(e){toast(isTouch()?'Copy an image first (long-press → Copy), then tap Paste':'Copy an image, then press Cmd/Ctrl+V here','warn')}return null}
-function dropZone(el,cb){el.addEventListener('dragover',e=>{e.preventDefault()});el.addEventListener('drop',e=>{e.preventDefault();const f=[...(e.dataTransfer?.files||[])].find(x=>x.type.startsWith('image/'));if(f)cb(f);else toast('Drop an image file (or copy + paste it)','warn')})}
-function photoQueue(){const all=activeProducts();if(!all.length)return toast('No products yet','warn');const miss=all.filter(p=>!p.photoId);const list=miss.length?miss:all;let i=0,img=null;
- const m=modal(`<h3>Product photos</h3><div id="pq_b"></div>`,'wide',{lock:true});m.onclose=()=>{pasteTarget=null;if(S.view==='products')renderPList()};
- const set=async f=>{if(!f)return;img=await compressImage(f,500,.78);m.querySelector('#pq_pv').innerHTML=`<img src="${img}">`;m.querySelector('#pq_ok').disabled=false};
+let pasteTarget=null,lastClipSig='';
+const isImgUrl=t=>/^(https?:\/\/\S+|data:image\/)/i.test(t||'');
+async function blobFromUrl(u){u=String(u||'').trim();try{if(/^data:image\//i.test(u))return await (await fetch(u)).blob()}catch(e){}
+ if(!/^https?:\/\//i.test(u))return null;for(const t of [u,'https://wsrv.nl/?url='+encodeURIComponent(u)+'&w=700&output=jpg']){try{const r=await fetch(t,{mode:'cors'});if(r.ok){const b=await r.blob();if(b.type.startsWith('image/'))return b}}catch(e){}}
+ toast('Could not load that link — use "Copy image" instead','warn');return null}
+document.addEventListener('paste',e=>{if(!pasteTarget)return;const items=[...(e.clipboardData?.items||[])];const it=items.find(x=>x.type.startsWith('image/'));
+ if(it){e.preventDefault();const f=it.getAsFile();lastClipSig='b'+f.size;pasteTarget(f);return}
+ const tx=(e.clipboardData?.getData('text')||'').trim();if(isImgUrl(tx)&&!e.target.closest?.('input,textarea')){e.preventDefault();lastClipSig='u'+tx.slice(0,300);blobFromUrl(tx).then(b=>b&&pasteTarget(b))}});
+function webSearch(name){const q=encodeURIComponent(String(name||'').replace(/["”]/g,' inch ')+' product');const w=window.open('https://www.google.com/search?tbm=isch&q='+q,'tpos_img');try{if(w)w.opener=null}catch(e){}}
+async function readClip(silent){try{if(!navigator.clipboard?.read)throw 0;const items=await navigator.clipboard.read();
+  for(const it of items){const t=it.types.find(x=>x.startsWith('image/'));if(t){const bl=await it.getType(t);return{blob:bl,sig:'b'+bl.size}}}
+  for(const it of items){if(it.types.includes('text/plain')){const tx=(await (await it.getType('text/plain')).text()).trim();if(isImgUrl(tx))return{url:tx,sig:'u'+tx.slice(0,300)}}}
+  if(!silent)toast('No image copied — long-press / right-click an image → Copy image','warn')}
+ catch(e){if(!silent)toast(isTouch()?'Copy an image first (long-press → Copy), then tap Paste':'Copy an image, then press Cmd/Ctrl+V here','warn')}return null}
+async function clipImage(){const c=await readClip(false);if(!c)return null;lastClipSig=c.sig;return c.blob||await blobFromUrl(c.url)}
+async function clipGranted(){try{return (await navigator.permissions.query({name:'clipboard-read'})).state==='granted'}catch(e){return false}}
+function dropZone(el,cb){el.addEventListener('dragover',e=>{e.preventDefault()});el.addEventListener('drop',e=>{e.preventDefault();const f=[...(e.dataTransfer?.files||[])].find(x=>x.type.startsWith('image/'));if(f)return cb(f);const u=e.dataTransfer?.getData('text/uri-list')||e.dataTransfer?.getData('text/plain');if(isImgUrl(u))blobFromUrl(u).then(b=>b&&cb(b));else toast('Drop an image (or copy + paste it)','warn')})}
+function photoQueue(){const all=activeProducts();if(!all.length)return toast('No products yet','warn');const miss=all.filter(p=>!p.photoId);const list=miss.length?miss:all;let i=0,img=null,busy=false;
+ if(CFG.pqAuto===undefined){CFG.pqAuto=true;saveCfg()}
+ const m=modal(`<h3>Product photos</h3><div id="pq_b"></div>`,'wide',{lock:true});
+ const onFocus=()=>{if(!CFG.pqAuto||busy)return;setTimeout(async()=>{if(!(await clipGranted()))return;const c=await readClip(true);if(!c||c.sig===lastClipSig)return;lastClipSig=c.sig;const bl=c.blob||await blobFromUrl(c.url);if(bl)set(bl)},300)};
+ window.addEventListener('focus',onFocus);
+ m.onclose=()=>{pasteTarget=null;window.removeEventListener('focus',onFocus);if(S.view==='products')renderPList()};
+ clipGranted().then(async g=>{if(g){const c=await readClip(true);if(c)lastClipSig=c.sig}});
+ const saveCur=async()=>{const p=list[i];if(!img||!p||busy)return;busy=true;const id='ph_'+uid();const fresh=S.products.get(p.id)||p;await saveMany([{kind:'photo',data:{id,img}},{kind:'product',data:{...fresh,photoId:id}}]);list[i]={...fresh,photoId:id};toast('Saved: '+p.name,'ok');i++;busy=false;draw()};
+ const set=async f=>{if(!f||busy)return;img=await compressImage(f,500,.78);const pv=m.querySelector('#pq_pv');if(!pv)return;pv.innerHTML=`<img src="${img}">`;m.querySelector('#pq_ok').disabled=false;if(CFG.pqAuto)setTimeout(saveCur,500)};
  const draw=()=>{const p=list[i];if(!p){closeModal(m);toast('All done','ok');return}img=null;const cur=photoURL(p.photoId);
   m.querySelector('#pq_b').innerHTML=`<p class="small mute">${i+1} of ${list.length}${miss.length?' without photo':''}</p>
   <div class="pform"><label class="photo" id="pq_ph"><span id="pq_pv" style="display:contents">${cur?`<img src="${cur}">`:ic('camera',28)+'<span class="small">Camera / file</span>'}</span><input type="file" accept="image/*" id="pq_f" hidden></label>
-  <div><b style="font-size:17px">${esc(p.name)}</b><p class="skuprev" style="margin:4px 0 12px">${esc(p.sku||'')} · ${esc(p.cat||'')}</p><div class="row" style="flex-wrap:wrap"><button class="btn" id="pq_web">${ic('search',16)} Search web</button><button class="btn" id="pq_paste">Paste image</button></div>
-  <p class="small mute">1. Search web → pick a clear photo on a white background.<br>2. Long-press (phone) or right-click (computer) → <b>Copy image</b>.<br>3. Come back → <b>Paste image</b> (or Cmd/Ctrl+V). Or tap the box to snap your own.</p></div></div>
+  <div><b style="font-size:17px">${esc(p.name)}</b><p class="skuprev" style="margin:4px 0 12px">${esc(p.sku||'')} · ${esc(p.cat||'')}</p><div class="row" style="flex-wrap:wrap"><button class="btn primary" id="pq_web">${ic('search',16)} Search web</button><button class="btn" id="pq_paste">Paste image</button></div>
+  <p class="small mute" style="margin-top:10px">${isTouch()?'Search web → long-press a photo → <b>Copy</b> → come back → <b>Paste image</b>.':'Search web → right-click a photo → <b>Copy image</b> → click back here. It saves by itself.<br><small>First time: click Paste image once and Allow clipboard.</small>'}</p>
+  <label class="chk"><input type="checkbox" id="pq_auto" ${CFG.pqAuto?'checked':''}> Save &amp; go to next item automatically</label></div></div>
   <div class="row end"><button class="btn" data-close>Close</button><button class="btn" id="pq_prev" ${i?'':'disabled'}>Back</button><button class="btn" id="pq_skip">Skip</button><button class="btn primary" id="pq_ok" disabled>Save &amp; next</button></div>`;
   const q=s=>m.querySelector(s);q('#pq_f').onchange=e=>set(e.target.files[0]);dropZone(q('#pq_ph'),set);pasteTarget=set;
   q('#pq_web').onclick=()=>webSearch(p.name);q('#pq_paste').onclick=async()=>set(await clipImage());
-  q('#pq_skip').onclick=()=>{i++;draw()};q('#pq_prev').onclick=()=>{i--;draw()};
-  q('#pq_ok').onclick=async()=>{if(!img)return;q('#pq_ok').disabled=true;const id='ph_'+uid();const fresh=S.products.get(p.id)||p;await saveMany([{kind:'photo',data:{id,img}},{kind:'product',data:{...fresh,photoId:id}}]);list[i]={...fresh,photoId:id};i++;draw()}};
+  q('#pq_auto').onchange=e=>{CFG.pqAuto=e.target.checked;saveCfg()};
+  q('#pq_skip').onclick=()=>{i++;draw()};q('#pq_prev').onclick=()=>{i--;draw()};q('#pq_ok').onclick=saveCur};
  draw()}
 
 /* ========= PRODUCTS ========= */
