@@ -17,6 +17,9 @@ Runs in any browser: iPhone, iPad/Android tablet, Mac, Windows. Works offline; s
 - One Supabase project per store/client.
 
 ## 3. AI receipt reader (free)
+Settings → Receipt reader → paste key → keep "Use on all devices" ticked → Save. Every synced device gets it automatically.
+BEFORE SELLING THE APP: untick / Remove shared key and give each client their own key.
+
 aistudio.google.com → Get API key → App → Settings → Receipt reader → paste.
 Stock In → snap supplier receipt → lines auto-filled and matched → review → Save (stock + cost updated).
 
