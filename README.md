@@ -22,7 +22,7 @@ Stock In → snap supplier receipt → lines auto-filled and matched → review 
 
 ## Receiving deliveries (Stock In)
 1. Stock In → Receive delivery → Take photo of receipt / DR → AI reads supplier, invoice no., date and every line.
-2. Each line is matched to your products (✓ SKU) or marked NEW. Wrong match → "not this item?". The app remembers each supplier's wording for next time.
+2. Everything is pre-filled for you to check: supplier (matched to your existing suppliers), invoice no., date, and per line qty, units, pack, cost, category, brand and a suggested sell price (tagged "suggested"). Each line is matched to your products (✓ SKU) or marked NEW; supplier item codes and printed barcodes are remembered for next time. Wrong match → "not this item?". The app remembers each supplier's wording for next time.
 3. Bulk: Buy unit + pack qty, e.g. 2 box × 100 pc = 200 pc in stock; 1 roll × 150 m = 150 m. Cost per selling unit is calculated.
 4. Sell price blank = decide later. "Fill suggested prices" fills blanks.
 5. Receive → stock added, costs updated, receipt photo kept. Items needing a price go to Price review.
