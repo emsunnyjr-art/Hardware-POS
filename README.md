@@ -74,6 +74,7 @@ For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg
 - Stock from every branch (and open loose stock) moves into the kept item; cost becomes the stock-weighted average. Supplier-list links and reports follow the kept item.
 - Price: per group, or for all ticked: **Latest price**, **Highest**, or **Cost + markup**. Edit any before Merge. Price change is logged.
 - Adding a new product that already exists → app asks "Open existing item instead?".
+- Same rule everywhere new items come in: **Stock In receiving** (AI or typed), **supplier price lists** and **CSV import** link to the existing item instead of creating a new one ("1 Liter" = "1L", brand words ignored). Different size or color = new item. CSV rows matched this way keep the existing name and SKU; their code is added as an old code.
 
 ## Brands
 - Product form → Brand (auto-guessed from the name). AI reads brand from receipts for new items.
