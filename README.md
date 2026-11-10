@@ -84,6 +84,14 @@ For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg
 - Color is part of the item identity: different color = different item for matching, duplicates, supplier cost and receiving. "Metal Furring 1x2" + Red = "Metal Furring 1x2 Red".
 - Searching "furring red" works. Supplier CSV download has a Color/grade column.
 
+## Buy per meter / kilo / liter, sell per roll / box / pail
+- Product → **Contents of 1 roll** (or box, pail…) + **Measured in**, e.g. 150 m, 25 kg, 16 L. Optional; separate from tingi.
+- Receiving "300 m" of an item sold per roll → 300 ÷ 150 = 2 rolls; cost ₱30/m × 150 = ₱4,500 per roll. Not whole rolls (200 m) → 1 sealed roll + 50 m open (for tingi). Contents not set yet → the line asks "m in 1 roll" (red) and Receive waits for it; it is then saved to the product.
+- Items NOT sold tingi (e.g. barbed wire: supplier prices per kg, you sell whole rolls only): receipt "203 kg @ ₱45" → line asks **Rolls received** (estimated from contents, editable) → 10 rolls at ₱9,135 ÷ 10 = ₱913.50 each; no loose kg is added. The actual kg per roll is remembered.
+- Supplier lists priced per m / kg / L fill the per-roll / per-box cost the same way.
+- ft↔m, g↔kg, mL↔L convert automatically (e.g. list per ft, sold per m).
+- Tingi (loose) = tick "Also sell loose" + loose price; uses the same contents.
+
 ## Brands
 - Product form → Brand (auto-guessed from the name). AI reads brand from receipts for new items.
 - Brand shows on sell tiles, is searchable, adds a brand code to auto-SKU (e.g. PT-ENM-1L-RED-BOY).
