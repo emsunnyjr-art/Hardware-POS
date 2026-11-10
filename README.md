@@ -65,6 +65,7 @@ For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg
 - Items on the list are linked to your products automatically when the name and sizes match (shown ✓). Product → Cost & price history shows each supplier's list price.
 - **Sell screen:** searching also shows "From supplier price lists · sell as order" for items out of stock or not stocked. Tap → suggested selling price (cost + your markup) → **Sell as order**: customer pays now, no stock deducted, receipt marked (ORDER). Owner can also **Add as product** from there.
 - Close / Day report lists **ORDERS TO FETCH** (item, qty, supplier, customer).
+- **Missing cost:** products with no cost get it from the supplier lists (linked or same-specs item, same unit or buy unit ÷ pack; newest list wins, cheapest on the same date). Happens automatically after saving a list; also Products → Missing cost → **Fill costs from supplier lists**, and in the product form (shows which supplier/date — edit if wrong). The first real delivery then updates the cost as usual.
 - Cashiers see only selling prices, never supplier costs. Download CSV per supplier for spreadsheets.
 
 ## Duplicates — one SKU per item
@@ -118,6 +119,9 @@ Format: CATEGORY-TYPE-SIZE-VARIANT, e.g. CM-CEM-40KG, LP-MPW-12MM, AD-CC-1L-RUG.
 - Whole sale: Sale discount + (₱ or %), applied after item discounts.
 - Cashier limit: Settings → Max cashier discount % (default 10). Above it, owner PIN is required at payment; approver is recorded.
 - Receipt shows each "Less", sale discount and "You saved". Reports → Discounts given + by cashier.
+
+## Typing tips
+- Tap a box that shows 0 → it empties so you can type. Leave it empty → 0 comes back.
 
 ## Hardware
 - Any USB/Bluetooth barcode scanner (keyboard mode) — just scan on the Sell screen.
