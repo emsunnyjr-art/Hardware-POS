@@ -67,6 +67,14 @@ For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg
 - Close / Day report lists **ORDERS TO FETCH** (item, qty, supplier, customer).
 - Cashiers see only selling prices, never supplier costs. Download CSV per supplier for spreadsheets.
 
+## Duplicates — one SKU per item
+- Products → **Duplicates (n)** appears when the same item exists more than once (same brand, same sizes/specs, same unit, or same barcode — e.g. added at another branch, imported twice, or named differently).
+- "same item" groups are ticked; "likely — check" groups are not. Colors and variants (Red vs Blue, 1/8 vs 3/16, PVC vs PPR) are never grouped.
+- ● = item kept. Default = the one with the oldest SKU. Its SKU stays; the other SKUs/barcodes still scan and search (old codes).
+- Stock from every branch (and open loose stock) moves into the kept item; cost becomes the stock-weighted average. Supplier-list links and reports follow the kept item.
+- Price: per group, or for all ticked: **Latest price**, **Highest**, or **Cost + markup**. Edit any before Merge. Price change is logged.
+- Adding a new product that already exists → app asks "Open existing item instead?".
+
 ## Brands
 - Product form → Brand (auto-guessed from the name). AI reads brand from receipts for new items.
 - Brand shows on sell tiles, is searchable, adds a brand code to auto-SKU (e.g. PT-ENM-1L-RED-BOY).
