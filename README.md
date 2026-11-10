@@ -47,6 +47,15 @@ Stock In → snap supplier receipt → lines auto-filled and matched → review 
 - Sell screen: tap "by roll ₱4,700" under the cart line to switch; stock drops by 150 m. Tap again to go back to per-meter.
 - Bulk selling needs the pack size set; products list shows "set pack" until it is.
 
+## Sell loose / tingi (roll or box, contents unknown)
+For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg.
+- Product → tick **Also sell loose / tingi** → Loose unit (m / pc / kg) → **✨ AI** suggests the loose price (and estimates the contents, e.g. "usually 150 m per roll"). Edit the price if you like.
+- Contents per roll/box: leave blank if unknown. The first time you sell loose, the app asks once ("How many m in one roll?", AI estimate prefilled) and remembers.
+- Sell screen: tap **by m ₱40** under the cart line (tap **by roll** to switch back). Items with only a loose price go straight in as loose.
+- Stock is kept in two parts: sealed (rolls) and open (meters). When open stock runs out, the next roll is opened automatically.
+- Inventory shows "Open: 148 m"; **Open roll** button breaks one manually (e.g. for display). Void returns the meters to open stock.
+- Cost per meter = roll cost ÷ contents; profit and stock value use it. Reports list loose sales separately ("loose, m").
+
 ## Brands
 - Product form → Brand (auto-guessed from the name). AI reads brand from receipts for new items.
 - Brand shows on sell tiles, is searchable, adds a brand code to auto-SKU (e.g. PT-ENM-1L-RED-BOY).
