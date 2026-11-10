@@ -56,6 +56,17 @@ For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg
 - Inventory shows "Open: 148 m"; **Open roll** button breaks one manually (e.g. for display). Void returns the meters to open stock.
 - Cost per meter = roll cost ÷ contents; profit and stock value use it. Reports list loose sales separately ("loose, m").
 
+## Supplier price lists (know prices even when out of stock)
+- Stock In → **Supplier prices** → **Upload price list** (owner). Choose photos (several pages at once), the PDF, or the Excel/CSV file the supplier sent. AI reads every item, size, unit and price (a 5-page list takes about 10–30 s). Needs Cloud sync.
+- Supplier name and list date are filled by the AI if printed; check them.
+- Review screen: each item shows ▲/▼ % vs the supplier's previous list, or NEW. Fix anything wrong, remove junk lines, then Save.
+- Updates: upload the new list for the same supplier. Changed prices keep the old price ("was ₱245"). Items not in the upload stay, unless you tick "This is the COMPLETE list".
+- Search every supplier at once (e.g. "angle bar 1/4"). ⭐ marks the cheapest supplier. Lists older than 30 days show "old — ask for new list".
+- Items on the list are linked to your products automatically when the name and sizes match (shown ✓). Product → Cost & price history shows each supplier's list price.
+- **Sell screen:** searching also shows "From supplier price lists · sell as order" for items out of stock or not stocked. Tap → suggested selling price (cost + your markup) → **Sell as order**: customer pays now, no stock deducted, receipt marked (ORDER). Owner can also **Add as product** from there.
+- Close / Day report lists **ORDERS TO FETCH** (item, qty, supplier, customer).
+- Cashiers see only selling prices, never supplier costs. Download CSV per supplier for spreadsheets.
+
 ## Brands
 - Product form → Brand (auto-guessed from the name). AI reads brand from receipts for new items.
 - Brand shows on sell tiles, is searchable, adds a brand code to auto-SKU (e.g. PT-ENM-1L-RED-BOY).
