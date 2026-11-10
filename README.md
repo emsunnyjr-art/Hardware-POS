@@ -77,6 +77,13 @@ For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg
 - Adding a new product that already exists → app asks "Open existing item instead?".
 - Same rule everywhere new items come in: **Stock In receiving** (AI or typed), **supplier price lists** and **CSV import** link to the existing item instead of creating a new one ("1 Liter" = "1L", brand words ignored). Different size or color = new item. CSV rows matched this way keep the existing name and SKU; their code is added as an old code.
 
+## Color / grade code
+- Suppliers like STSC color-code thickness or grade (metal furring Red/Green/Blue, square bar Orange/Yellow…). Each product and supplier-list item has a **Color / grade** box, shown as a colored tag everywhere (sell tiles, products, supplier prices, duplicates).
+- Price-list AI fills it for every row (also when one color heading covers several rows). Review screen shows it per line; edit if wrong.
+- Blank box = color is taken from the name (e.g. "Metal Furring 1x2 Red" → Red).
+- Color is part of the item identity: different color = different item for matching, duplicates, supplier cost and receiving. "Metal Furring 1x2" + Red = "Metal Furring 1x2 Red".
+- Searching "furring red" works. Supplier CSV download has a Color/grade column.
+
 ## Brands
 - Product form → Brand (auto-guessed from the name). AI reads brand from receipts for new items.
 - Brand shows on sell tiles, is searchable, adds a brand code to auto-SKU (e.g. PT-ENM-1L-RED-BOY).
