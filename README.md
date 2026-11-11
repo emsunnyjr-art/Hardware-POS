@@ -91,6 +91,11 @@ For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg
 - Color is part of the item identity: different color = different item for matching, duplicates, supplier cost and receiving. "Metal Furring 1x2" + Red = "Metal Furring 1x2 Red".
 - Searching "furring red" works. Supplier CSV download has a Color/grade column.
 
+## Two selling prices at receiving
+- Item stocked per meter, delivered by the roll (e.g. THHN 2.0mm: 1 roll = 150 m): the line shows **Sell price / m** (₱35) and **Sell price / whole roll** (₱2,850, optional). Both are saved; the Sell screen tile then shows **per m ₱35** and **1 roll (150 m) ₱2,850**.
+- Item stocked per roll/box: tap **＋ Also sell per m / pc (tingi)** on the line → tingi unit, m in 1 roll, price per m (suggested, editable). The tile then shows **1 roll** and **per m**.
+- Markup is shown for each price; a warning appears if the whole-roll price is not cheaper than buying it per meter, or 150 m of tingi costs less than one roll.
+
 ## Buy per meter / kilo / liter, sell per roll / box / pail
 - Product → **Contents of 1 roll** (or box, pail…) + **Measured in**, e.g. 150 m, 25 kg, 16 L. Optional; separate from tingi.
 - Receiving "300 m" of an item sold per roll → 300 ÷ 150 = 2 rolls; cost ₱30/m × 150 = ₱4,500 per roll. Not whole rolls (200 m) → 1 sealed roll + 50 m open (for tingi). Contents not set yet → the line asks "m in 1 roll" (red) and Receive waits for it; it is then saved to the product.
