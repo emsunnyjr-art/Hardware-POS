@@ -93,7 +93,7 @@ For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg
 
 ## Two selling prices at receiving
 - Item stocked per meter, delivered by the roll (e.g. THHN 2.0mm: 1 roll = 150 m): the line shows **Sell price / m** (₱35) and **Sell price / whole roll** (₱2,850, optional). Both are saved; the Sell screen tile then shows **per m ₱35** and **1 roll (150 m) ₱2,850**.
-- Item stocked per roll/box: tap **＋ Also sell per m / pc (tingi)** on the line → tingi unit, m in 1 roll, price per m (suggested, editable). The tile then shows **1 roll** and **per m**.
+- Item stocked per roll/box/bag/pail: the tingi boxes are always open on the line — tingi unit, m in 1 roll, price per m (suggested, editable). Fill the price → tingi on (tile shows **1 roll** and **per m**); leave it blank → whole only. Items sold per piece keep a small **＋ Also sell per m / pc** link.
 - Markup is shown for each price; a warning appears if the whole-roll price is not cheaper than buying it per meter, or 150 m of tingi costs less than one roll.
 
 ## Buy per meter / kilo / liter, sell per roll / box / pail
