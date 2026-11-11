@@ -9,19 +9,26 @@ Runs in any browser: iPhone, iPad/Android tablet, Mac, Windows. Works offline; s
 4. Login: **Owner / PIN 1234** → Settings → Users → change PIN, add cashiers.
 
 ## 2. Cloud sync across branches (free)
-1. supabase.com → New project (free plan).
-2. SQL Editor → paste `setup.sql` → Run.
+1. supabase.com → New project (free plan). **One project per store/client.**
+2. SQL Editor → paste ALL of `setup.sql` → edit the one marked line (this project's Reference ID) → Run.
 3. Project Settings → API → copy **Project URL** and **publishable (anon) key**.
 4. App → Settings → Cloud sync → paste → Save & sync now. Repeat on every device.
 - Free projects pause after 7 days with no activity; daily sales keep it awake.
-- One Supabase project per store/client.
 
-## 3. AI receipt reader (free)
-Settings → Receipt reader → paste key → keep "Use on all devices" ticked → Save. Every synced device gets it automatically.
-BEFORE SELLING THE APP: untick / Remove shared key and give each client their own key.
+## 3. AI reader (receipts, supplier price lists, tingi price)
+Runs on the store's own Supabase server — **no AI key on any device, nothing secret in the synced data.**
+1. Supabase → Edge Functions → Deploy new function → name `read-receipt` → paste `supabase/read-receipt/index.ts` → turn OFF "Verify JWT" → Deploy.
+2. Edge Functions → Secrets → add `ANTHROPIC_API_KEY` = the store's own key (console.anthropic.com; set a monthly spend limit).
+3. Optional backup reader: SQL Editor → `insert into pos_secrets (id, value) values ('gemini', '<Google AI key>');`
+- Settings → Receipt reader shows "✓ Runs on your cloud server". A Gemini key can still be saved on one device only (never synced) for use without the server.
 
-aistudio.google.com → Get API key → App → Settings → Receipt reader → paste.
-Stock In → snap supplier receipt → lines auto-filled and matched → review → Save (stock + cost updated).
+## Security — read before selling or giving devices to staff
+- **The sync key (Project URL + publishable key) is the lock.** Anyone who copies it from a device can read that store's data and add or change records. Keep it only on the store's own devices; never post it; use one Supabase project per store.
+- What the key **cannot** do (enforced in the database by `setup.sql`): delete records, empty tables, blank a record, change a record's type, read the history table, read server secrets (AI keys), or delete AI jobs.
+- **Every overwritten record is kept** in `pos_records_history` (server only). A bad overwrite can be undone in the SQL Editor — the steps are in `setup.sql`, section 3.
+- **PINs are light protection.** 4-digit PINs are checked on the device (needed for offline use) and their salted hashes sync with the data. If the sync key leaks, PINs can be guessed quickly. PINs keep honest cashiers honest — nothing more.
+- **Owner PIN for dangerous actions:** Erase this device (also type DELETE), Restore backup, Delete a supplier price list, Replace all SKUs and Merge duplicates show exactly what will be affected and need the owner PIN again. A cashier PIN never passes.
+- If a phone with the app is lost: create a new publishable key in Supabase (Project Settings → API), revoke the old one, and paste the new key on the remaining devices.
 
 ## Receiving deliveries (Stock In)
 1. Stock In → Receive delivery → Take photo of receipt / DR → AI reads supplier, invoice no., date and every line.
@@ -137,6 +144,7 @@ Format: CATEGORY-TYPE-SIZE-VARIANT, e.g. CM-CEM-40KG, LP-MPW-12MM, AD-CC-1L-RUG.
 
 ## Typing tips
 - Tap a box that shows 0 → it empties so you can type. Leave it empty → 0 comes back.
+- Save buttons stay grey until you change something, and turn grey again after saving.
 
 ## Hardware
 - Any USB/Bluetooth barcode scanner (keyboard mode) — just scan on the Sell screen.
