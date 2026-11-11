@@ -58,7 +58,7 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg.
 - Product → tick **Also sell loose / tingi** → Loose unit (m / pc / kg) → **✨ AI** suggests the loose price (and estimates the contents, e.g. "usually 150 m per roll"). Edit the price if you like.
 - Contents per roll/box: leave blank if unknown. The first time you sell loose, the app asks once ("How many m in one roll?", AI estimate prefilled) and remembers.
-- Sell screen: tap **by m ₱40** under the cart line (tap **by roll** to switch back). Items with only a loose price go straight in as loose.
+- Sell screen: tingi items show two buttons on the tile — **1 roll ₱4,900** and **per m ₱40** — tap the one the customer wants (both can be in the same sale). The cart line can still be switched with **by m / by roll**. Items with only a loose price go straight in as loose.
 - Stock is kept in two parts: sealed (rolls) and open (meters). When open stock runs out, the next roll is opened automatically.
 - Inventory shows "Open: 148 m"; **Open roll** button breaks one manually (e.g. for display). Void returns the meters to open stock.
 - Cost per meter = roll cost ÷ contents; profit and stock value use it. Reports list loose sales separately ("loose, m").
@@ -135,6 +135,11 @@ Format: CATEGORY-TYPE-SIZE-VARIANT, e.g. CM-CEM-40KG, LP-MPW-12MM, AD-CC-1L-RUG.
 - Products → Auto-SKU → Fill missing / Redo all.
 - Category codes: Settings → Categories & SKU codes (CODE = Name, one per line).
 - Blank category is guessed from the item name (plywood → LP, solvent → AD, etc.).
+
+## Cart
+- **−** reduces the quantity (at 0 the item is removed), **+** adds, or type the quantity.
+- **✕** on a line removes that item.
+- **Cancel sale** (top of the cart) clears the whole order after a confirm — nothing is charged, stock unchanged.
 
 ## Discounts
 - Per item: tap the line in the cart → Discount on this item → % off, ₱ off each piece, or ₱ off whole line → quick 5/10/15/20%. Preview shows the peso discount before Update.
