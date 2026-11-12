@@ -91,6 +91,14 @@ For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg
 - Color is part of the item identity: different color = different item for matching, duplicates, supplier cost and receiving. "Metal Furring 1x2" + Red = "Metal Furring 1x2 Red".
 - Searching "furring red" works. Supplier CSV download has a Color/grade column.
 
+## AI: whole only or tingi?
+The AI decides for every roll / box / bag / pail / pack item how it is sold — no manual sorting:
+- **Whole only:** paint, thinner, sealant/epoxy, cement and other bags, tools, fittings… → no tingi boxes, line shows "✨ AI: sold whole" (+ "sell tingi anyway" if you disagree).
+- **Tingi:** wire/hose/rope/chain per **m**, nails/tie wire/welding rod per **kg**, screws/bolts/rivets per **pc**, sandpaper per sheet → tingi boxes open, unit and contents filled ("AI est." — check them), price suggested.
+- Runs automatically on **receiving lines** and in the **product form** ("✨ AI: usually sold per m · about 150 m in 1 roll — Set up tingi").
+- Products → **✨ Tingi check (n)** sorts all existing items at once; review, edit contents/prices, untick mistakes, then Apply.
+- Each decision is remembered per product, so the AI is asked only once. Needs Cloud sync (runs on your server).
+
 ## Two selling prices at receiving
 - Item stocked per meter, delivered by the roll (e.g. THHN 2.0mm: 1 roll = 150 m): the line shows **Sell price / m** (₱35) and **Sell price / whole roll** (₱2,850, optional). Both are saved; the Sell screen tile then shows **per m ₱35** and **1 roll (150 m) ₱2,850**.
 - Item stocked per roll/box/bag/pail: the tingi boxes are always open on the line — tingi unit, m in 1 roll, price per m (suggested, editable). Fill the price → tingi on (tile shows **1 roll** and **per m**); leave it blank → whole only. Items sold per piece keep a small **＋ Also sell per m / pc** link.
