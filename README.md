@@ -15,6 +15,12 @@ Runs in any browser: iPhone, iPad/Android tablet, Mac, Windows. Works offline; s
 4. App → Settings → Cloud sync → paste → Save & sync now. Repeat on every device.
 - Free projects pause after 7 days with no activity; daily sales keep it awake.
 
+## Setup & health (Settings → top card)
+- **Setup check:** tests the store's database from the device without changing any data — sync key cannot delete, history table exists and is locked, secrets locked, unknown record types refused, AI queue present, AI spending limit active — plus store name, owner PIN not 1234, products, first sale, backup. Each ✗ says what to do. **Print** keeps a copy for the customer file. **Test AI reader** sends one small test to the AI.
+- The owner gets a ⚠ warning at login (checked once a day) if the database is still on the OLD rules.
+- **New store checklist:** the 15 steps for each new customer, tickable and printable.
+- **Self-test:** runs a fake sale (stock in, cart, tingi roll opening, cash sale, receipt, report) in a sandbox and reports what works. Nothing is saved or synced.
+
 ## 3. AI reader (receipts, supplier price lists, tingi price)
 Runs on the store's own Supabase server — **no AI key on any device, nothing secret in the synced data.**
 1. Supabase → Edge Functions → Deploy new function → name `read-receipt` → paste `supabase/read-receipt/index.ts` → turn OFF "Verify JWT" → Deploy.
@@ -23,9 +29,14 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Settings → Receipt reader shows "✓ Runs on your cloud server". A Gemini key can still be saved on one device only (never synced) for use without the server.
 
 ## Security — read before selling or giving devices to staff
+- **Sync never gets stuck:** if the server refuses one record (e.g. old rules, bad data), that record is set aside and shown in Settings → Cloud sync; everything else keeps syncing.
+- **Restore backup wins:** restored records are re-sent as the newest version, so the cloud and every other device take the backup copy.
+- **PINs** are 4 digits, hashed per user and checked on the device (works offline). The hashes are in the synced data, so a person with the sync key could try to guess them — another reason to guard the key.
+- **Manual test before release:** `TESTING.md` (run it on a real phone).
 - **The sync key (Project URL + publishable key) is the lock.** Anyone who copies it from a device can read that store's data and add or change records. Keep it only on the store's own devices; never post it; use one Supabase project per store.
 - What the key **cannot** do (enforced in the database by `setup.sql`): delete records, empty tables, blank a record, change a record's type, read the history table, read server secrets (AI keys), or delete AI jobs.
 - **Every overwritten record is kept** in `pos_records_history` (server only). A bad overwrite can be undone in the SQL Editor — the steps are in `setup.sql`, section 3.
+- **AI spending guard (database):** the server refuses AI jobs over 60 per device per 10 minutes, 300 per store per hour, 1,000 per store per day, or photos over 6 MB. The app shows "AI limit: …". Also set a monthly spend limit on the store's Anthropic key.
 - **PINs are light protection.** 4-digit PINs are checked on the device (needed for offline use) and their salted hashes sync with the data. If the sync key leaks, PINs can be guessed quickly. PINs keep honest cashiers honest — nothing more.
 - **Owner PIN for dangerous actions:** Erase this device (also type DELETE), Restore backup, Delete a supplier price list, Replace all SKUs and Merge duplicates show exactly what will be affected and need the owner PIN again. A cashier PIN never passes.
 - If a phone with the app is lost: create a new publishable key in Supabase (Project Settings → API), revoke the old one, and paste the new key on the remaining devices.
@@ -138,9 +149,8 @@ Products → Photos: steps through every item without a photo. "Save & go to nex
 - Also works: Cmd/Ctrl+V, pasting an image link, dragging an image onto the box, or tapping the box to use the camera.
 
 Background:
-- Quick clean (automatic, ~0.05 s): plain/light backgrounds turn pure white; item is cropped and centered in a square. Toggle: "Clean background to white automatically".
-- Busy background: app warns and waits → tap "AI remove background" (first time downloads ~40 MB AI model, then a few seconds per photo). Product form has an AI button too.
-- AI uses IMG.LY background-removal (AGPL). Fine for own use; if reselling, keep the app source public or buy IMG.LY's commercial license.
+- Quick clean (automatic, ~0.05 s, built into the app): plain/light backgrounds turn pure white; the item is cropped and centered in a square. Toggle: "Clean background to white automatically".
+- Busy background: kept as is. For best results use web photos on white, or take the photo against a white wall or paper.
 
 ## SKU codes
 Format: CATEGORY-TYPE-SIZE-VARIANT, e.g. CM-CEM-40KG, LP-MPW-12MM, AD-CC-1L-RUG.
@@ -182,3 +192,17 @@ Inventory → Stock count records Variance = Physical − Expected per item.
 ## Notes
 - Receipts print "This is not an official receipt." Issuing BIR receipts from a POS requires BIR registration (PTU) of the software/machine.
 - Settings → Backup weekly, even with sync.
+
+## Third-party libraries and licenses
+All are permissive licenses that allow selling the app. Keep these notices.
+| Library | Used for | Version | License |
+|---|---|---|---|
+| html5-qrcode | camera barcode / QR scanning | 2.3.8 | Apache-2.0 |
+| JsBarcode | barcode labels | 3.11.6 | MIT |
+| qrcodejs (davidshimjs) | QR labels | 1.0.0 | MIT |
+| SheetJS Community Edition (xlsx) | reading supplier Excel price lists | 0.18.5 | Apache-2.0 |
+| pdf.js (Mozilla) | reading supplier PDF price lists | 3.11.174 | Apache-2.0 |
+| Supabase JS client (server function only) | AI job queue on the store's server | 2.x | MIT |
+| Anthropic TypeScript SDK (server function only) | AI reading on the store's server | 1.6.0 | Apache-2.0 |
+The libraries are loaded from public CDNs (cdnjs, unpkg) and are not modified. No AGPL or other copyleft library is used (IMG.LY background removal was removed in v36).
+

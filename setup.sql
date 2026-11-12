@@ -126,6 +126,34 @@ drop trigger if exists pos_ai_jobs_kick on public.pos_ai_jobs;
 create trigger pos_ai_jobs_kick after insert on public.pos_ai_jobs
   for each row when (new.status = 'queued') execute function public.pos_ai_jobs_kick();
 
+-- AI spending guard: refuse jobs over 60 per device per 10 min, 300 per store per hour,
+-- 1,000 per store per day, and photos over 6 MB. Normal use never reaches these.
+create index if not exists pos_ai_jobs_created_idx on public.pos_ai_jobs (created_at);
+create or replace function public.pos_ai_jobs_limit() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare dev text := split_part(new.id, '_', 2); n_dev int; n_hour int; n_day int;
+begin
+  if new.image is not null and length(new.image) > 8000000 then
+    raise exception 'AI limit: photo too large (max 6 MB). Take the photo again or use a smaller file.' using errcode = 'P0001';
+  end if;
+  if new.cats is not null and pg_column_size(new.cats) > 300000 then
+    raise exception 'AI limit: request too large.' using errcode = 'P0001';
+  end if;
+  select count(*) into n_day  from public.pos_ai_jobs where created_at > now() - interval '1 day';
+  if n_day >= 1000 then raise exception 'AI limit: 1,000 AI reads per day reached for this store. Try again tomorrow.' using errcode = 'P0001'; end if;
+  select count(*) into n_hour from public.pos_ai_jobs where created_at > now() - interval '1 hour';
+  if n_hour >= 300 then raise exception 'AI limit: 300 AI reads per hour reached for this store. Try again later.' using errcode = 'P0001'; end if;
+  if dev <> '' then
+    select count(*) into n_dev from public.pos_ai_jobs where created_at > now() - interval '10 minutes' and split_part(id, '_', 2) = dev;
+    if n_dev >= 60 then raise exception 'AI limit: too many AI reads from this device. Wait 10 minutes.' using errcode = 'P0001'; end if;
+  end if;
+  return new;
+end $$;
+revoke execute on function public.pos_ai_jobs_limit() from public, anon, authenticated;
+drop trigger if exists pos_ai_jobs_limit on public.pos_ai_jobs;
+create trigger pos_ai_jobs_limit before insert on public.pos_ai_jobs
+  for each row execute function public.pos_ai_jobs_limit();
+
 -- >>> ONE LINE TO EDIT: put THIS project's reference (Project Settings → General → Reference ID).
 insert into public.pos_secrets (id, value)
 values ('function_url', 'https://YOUR-PROJECT-REF.supabase.co/functions/v1/read-receipt')

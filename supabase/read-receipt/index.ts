@@ -1,6 +1,6 @@
-// Tindero POS: server-side receipt reader. Triggered by insert into public.pos_ai_jobs.
-// Primary: Claude (same ANTHROPIC_API_KEY secret the Telegram shift-report reader uses) — fast and accurate.
-// Backup: Google Gemini (key saved from the app). Writes parsed JSON back and clears the photo.
+// Tindero POS: server-side AI reader. Triggered by insert into public.pos_ai_jobs.
+// Primary: Claude (ANTHROPIC_API_KEY edge-function secret). Backup for receipts: Google Gemini (pos_secrets / GEMINI_API_KEY, never readable by the app).
+// Tasks: receipt photo (default), "pricelist" (supplier price list pages, with color/grade), "loose" (tingi price), "sellmode" (whole vs tingi per item).
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk@1.6.0";
 
@@ -209,7 +209,7 @@ const PL_SCHEMA = {
 
 function plPrompt(cats: string[]) {
   return "This is a page of a Philippine hardware / steel / construction-materials SUPPLIER PRICE LIST (or a chunk of one exported from Excel as CSV). Return every priced item as JSON.\n" +
-    "name = full item description a hardware store would use, including type, size, thickness/gauge, length, grade, color and brand if shown, normal capitalization " +
+    "name = full item description a hardware store would use, including type, size, thickness/gauge, length, grade and brand if shown, normal capitalization " +
     "(e.g. 'Angle Bar 1-1/2\" x 1-1/2\" x 1/4\" (6m)', 'Deformed Bar 10mm x 6m Grade 33', 'GI Sheet Corrugated Ga.26 x 8ft'). Carry section headings into the name when rows only show sizes (a row '1/4 x 1' under heading 'FLAT BAR' -> 'Flat Bar 1/4\" x 1\"'). " +
     "Grid tables (sizes down, lengths/gauges across): one line per priced cell, putting both dimensions in the name. " +
     "color = the color or color code the list gives this item (suppliers often color-code thickness, gauge or grade, e.g. metal furring Red/Green/Blue, square bar Orange/Yellow; also paint and roofing colors), one or two words like 'Red', 'Blue', 'Sky Blue'. When a color heading or color column applies to several rows, give it to each of those rows. '' if none. Keep size/thickness in name; do not put the color in name. Items that differ only by color are different items: output each one. " +
@@ -251,7 +251,52 @@ async function readPriceList(job: { image: string; cats: any }, deadline: number
   throw new Error(lastErr || "Claude unavailable");
 }
 
+// ---- Sell mode: is each item sold whole only, or also loose (tingi) — and per what? cats = {task:"sellmode", items:[{key,name,unit,brand,cat}]}
+const SM_ITEM = { key: { type: "string" }, sell_unit: { type: "string" }, tingi: { type: "boolean" }, tingi_unit: { type: "string" }, contents: { type: "number" }, reason: { type: "string" } };
+const SM_SCHEMA = { type: "object", additionalProperties: false, required: ["items"],
+  properties: { items: { type: "array", items: { type: "object", additionalProperties: false, required: Object.keys(SM_ITEM), properties: SM_ITEM } } } } as const;
+
+async function sellMode(t: any, deadline: number) {
+  if (!ANTHROPIC_API_KEY) throw new Error("no Claude key");
+  const items = (Array.isArray(t.items) ? t.items : []).slice(0, 60).map((x: any) => ({ key: String(x.key), name: String(x.name || "").slice(0, 160), unit: String(x.unit || ""), brand: String(x.brand || ""), cat: String(x.cat || "") }));
+  if (!items.length) return { items: [] };
+  const prompt = "You set up products for a small hardware store in Cavite, Philippines. For each item decide how the store sells it.\n" +
+    "sell_unit = the normal whole selling unit, one word (pc, roll, box, can, gal, pail, bag, sack, tube, bottle, set, pack, sheet, length, kg, m, bundle, coil, pair). Keep the given unit unless it is clearly wrong.\n" +
+    "tingi = true ONLY if Filipino hardware stores commonly open this item and sell part of it: electrical wire/cable, speaker wire, hose, rope, chain, cyclone/welded wire mesh, plastic sheeting, sold per m or ft; nails, tie wire, GI wire, welding rod, sold per kg; screws, bolts, rivets, washers, tek screws, sold per pc from a box; sandpaper per sheet from a pack. " +
+    "tingi = false for things sold whole: paint, thinner, sealants, adhesives in cans/tubes, cement and other bags/sacks, tools, fittings, pipes sold by the length, plywood and boards, steel bars and tubes, roofing sheets, locks, bulbs, switches, outlets, faucets.\n" +
+    "tingi_unit = m, ft, kg or pc ('' when tingi is false). contents = usual amount of tingi_unit in ONE sell_unit for this exact item in the Philippines (e.g. THHN wire roll 150 m, common nails box 25 kg, welding rod box 5 kg or 20 kg per size, tek screw box 100 pc); 0 if unknown or tingi is false. reason = max 8 words.\n" +
+    "Return one entry per input key.\nItems:\n" + JSON.stringify(items);
+  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY, timeout: 90_000, maxRetries: 1 });
+  let lastErr = "";
+  for (const model of CLAUDE_MODELS) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (Date.now() > deadline - 5000) throw new Error(lastErr || "out of time");
+      try {
+        const res: any = await client.messages.create({ model, max_tokens: 8000, output_config: { format: { type: "json_schema", schema: SM_SCHEMA } }, messages: [{ role: "user", content: prompt }] } as any);
+        const text = (res.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
+        return { ...JSON.parse(text), _model: model };
+      } catch (e: any) {
+        const msg = String(e?.message ?? e); lastErr = "Claude: " + msg.slice(0, 200); const st = e?.status;
+        if (st === 404 || /model/i.test(msg) && st === 400) break;
+        if (st === 429 || st === 529 || (st ?? 500) >= 500) { await sleep([1500, 4000, 8000][attempt]); continue; }
+        throw new Error(lastErr);
+      }
+    }
+  }
+  throw new Error(lastErr || "Claude unavailable");
+}
+
 async function processJob(job: { id: string; image: string; cats: any }) {
+  if (job.cats && !Array.isArray(job.cats) && job.cats.task === "sellmode") {
+    try {
+      const out: any = await sellMode(job.cats, Date.now() + 100_000);
+      const model = out._model; delete out._model;
+      await sb.from("pos_ai_jobs").update({ status: "done", result: out, model, cats: { task: "sellmode" }, updated_at: new Date().toISOString() }).eq("id", job.id);
+    } catch (e) {
+      await sb.from("pos_ai_jobs").update({ status: "error", error: (e as Error).message.slice(0, 500), cats: { task: "sellmode" }, updated_at: new Date().toISOString() }).eq("id", job.id);
+    }
+    return;
+  }
   if (job.cats && !Array.isArray(job.cats) && job.cats.task === "pricelist") {
     try {
       const out: any = await readPriceList(job, Date.now() + BUDGET_MS);
