@@ -82,9 +82,12 @@ button:disabled,.btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.4
 .stk{font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px;background:var(--ok-soft);color:var(--ok)}.stk.warn{background:var(--warn-soft);color:var(--warn)}.stk.bad{background:var(--bad-soft);color:var(--bad)}
 .cart{background:var(--card);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .cart-h{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}.cart-h b{font-size:16px}
-#cartclose{display:none;margin-left:auto}
+#cartclose{display:none;margin-left:auto}.cancelsale{margin-left:auto}
 .cancelsale{margin-left:auto;color:var(--bad);border-color:var(--bad);padding:4px 10px}#cartclose+.cancelsale,.cancelsale+#cartclose{margin-left:0}
-.lrm{width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:var(--mute);cursor:pointer;display:grid;place-items:center}.lrm:hover,.lrm:active{background:var(--soft);color:var(--bad)}
+.lrm{width:32px;height:32px;border:0;border-radius:50%;background:rgba(220,38,38,.12);color:var(--bad);cursor:pointer;display:grid;place-items:center}.lrm:hover,.lrm:active{background:var(--bad);color:#fff}
+.cartback{display:none;padding:4px 10px}.cfclear{margin-left:10px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.22);font-size:13px;font-weight:700;white-space:nowrap}
+.totop{position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:60;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.25);display:none;align-items:center;justify-content:center;flex-direction:column;font-size:11px;font-weight:700;line-height:1;cursor:pointer}.totop.show{display:flex}.totop b{font-size:18px}
+body.hasfab .totop{bottom:calc(142px + env(safe-area-inset-bottom))}
 .tile2{cursor:default}.tile2 .t2top{cursor:pointer;display:flex;flex-direction:column;flex:1}
 .tchoice{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px 8px 8px}.tchoice button{border:1px solid var(--line);border-radius:10px;background:var(--soft);padding:6px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.15;color:var(--ink)}.tchoice button b{font-size:14px}.tchoice button small{font-size:10.5px}.tchoice .lo{border-color:var(--acc)}.tchoice button:active{transform:scale(.97)}
 .lines{flex:1;overflow:auto;padding:6px 10px}
@@ -175,7 +178,7 @@ td.n,th.n{text-align:right}.tw{overflow-x:auto}
  .sell{grid-template-columns:1fr;height:auto}#view{flex:none}main{display:block}.catalog{padding:12px}
  .grid{grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:8px}.tname{font-size:12px;min-height:34px;padding:6px 8px 0}.tfoot{padding:2px 8px 8px}.tfoot b{font-size:13px}
  .cart{position:fixed;left:0;right:0;bottom:0;height:88dvh;border-radius:20px 20px 0 0;border:0;z-index:70;transform:translateY(105%);transition:transform .25s;box-shadow:0 -10px 40px rgba(0,0,0,.3)}
- .cart.open{transform:none}#cartclose{display:inline-flex}
+ .cart.open{transform:none}#cartclose{display:inline-flex}.cartback{display:inline-flex}
  .cartfab.show{display:flex;position:fixed;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:45;align-items:center;gap:10px;padding:14px 18px;border:0;border-radius:16px;background:var(--acc);color:#fff;font-weight:700;font-size:16px;box-shadow:0 8px 24px rgba(234,88,12,.4)}
  .cartfab b{margin-left:auto}
  .mwrap{align-items:flex-end;padding:0}.modal,.modal.wide,.modal.full{max-width:none;border-radius:20px 20px 0 0;max-height:94dvh;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
@@ -254,7 +257,7 @@ const DB={db:null,
  clear(){return this.rq(this.st('readwrite').clear())}};
 
 const CFG=(()=>{try{return JSON.parse(localStorage.getItem('tpos_cfg')||'{}')}catch(e){return{}}})();
-const aiKey=()=>CFG.aiKey||'';const APP_VER='34';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
+const aiKey=()=>CFG.aiKey||'';const APP_VER='35';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
 function saveCfg(){try{localStorage.setItem('tpos_cfg',JSON.stringify(CFG))}catch(e){}}
 if(!CFG.dev){CFG.dev=Math.random().toString(36).slice(2,4).toUpperCase();saveCfg()}
 
@@ -411,12 +414,19 @@ const discCap=()=>+(S.settings.maxDisc??10);
 function totals(){const sub=r2(S.cart.reduce((a,l)=>a+lineGross(l),0));const ldisc=r2(S.cart.reduce((a,l)=>a+lineDisc(l),0));const base=r2(sub-ldisc);const odisc=r2(Math.min(base,S.discPct?base*S.disc/100:S.disc));const disc=r2(ldisc+odisc);return{sub,ldisc,odisc,disc,total:r2(base-odisc),pct:sub?disc/sub*100:0}}
 const overCap=t=>!isOwner()&&t.disc>0&&t.pct>discCap()+1e-9;
 function renderCart(){const c=S.cart,t=totals(),el=$('#cart');if(!el)return;
- el.innerHTML=`<div class="cart-h"><b>Current sale</b><span class="mute small">${c.length} line${c.length===1?'':'s'}</span>${c.length?`<button class="btn sm cancelsale" onclick="cancelSale()">${ic('x',14)} Cancel sale</button>`:''}<button class="btn ghost sm" id="cartclose" onclick="toggleCart(false)">${ic('x')}</button></div>
+ el.innerHTML=`<div class="cart-h"><button class="btn sm cartback" onclick="toggleCart(false)">← Back</button><b>Current sale</b><span class="mute small">${c.length} line${c.length===1?'':'s'}</span>${c.length?`<button class="btn sm cancelsale" onclick="cancelSale()">${ic('x',14)} Cancel sale</button>`:''}</div>
  <div class="lines">${c.length?c.map((l,i)=>`<div class="line"><div class="ln" onclick="editLine(${i})"><div>${esc(l.name)}</div><small class="mute">${peso(l.price)} / ${esc(l.unit)}${l.bulk?` (${fmtQty(l.mult)} ${esc(S.products.get(l.pid)?.unit||'')})`:''}${(()=>{const pp=S.products.get(l.pid);return pp&&+pp.bulkPrice>0?` · <button class="link" style="font-size:12px" onclick="event.stopPropagation();setBulk(${i},${!l.bulk})">${l.bulk?'by '+esc(pp.unit||'pc'):'by '+esc(pp.buyUnit||'bulk')+' '+peso(bulkPriceOf(pp,l.from))}</button>`:''})()}${(()=>{const pp=S.products.get(l.pid);if(!pp||!hasLoose(pp)||(l.loose&&!hasPrice(pp)))return '';return ` · <button class="link" style="font-size:12px" onclick="event.stopPropagation();setLoose(${i},${!l.loose})">${l.loose?'by '+esc(pp.unit||'pc')+' '+peso(priceOf(pp,l.from)):'by '+esc(pp.looseUnit||'pc')+' '+peso(loosePriceOf(pp,l.from))}</button>`})()}${l.from!==S.branch?' · from '+esc(brName(l.from)):''}${l.order?` · <b style="color:var(--acc)">ORDER</b>${isOwner()&&l.sup?' <span class="mute">'+esc(l.sup)+'</span>':''}`:''}</small></div><div class="qty"><button onclick="qtyStep(${i},-1)">−</button><input inputmode="decimal" value="${fmtQty(l.qty)}" onchange="qtySet(${i},this.value)" onfocus="this.select()"><button onclick="qtyStep(${i},1)">+</button></div><div class="lt" onclick="editLine(${i})" title="Tap for price / discount">${peso(lineGross(l)-lineDisc(l))}${lineDisc(l)?`<small>−${discLbl(l)} off</small>`:''}</div><button class="lrm" title="Remove item" aria-label="Remove ${esc(l.name)}" onclick="removeLine(${i})">${ic('x',16)}</button></div>`).join(''):`<div class="empty">${ic('scan',40)}<p>Tap items or scan a barcode</p></div>`}</div>
  <div class="cart-f"><div class="row"><span>Subtotal</span><span>${peso(t.sub)}</span></div>${t.ldisc?`<div class="row"><span>Item discounts</span><span>−${peso(t.ldisc)}</span></div>`:''}<div class="row"><button class="link" onclick="setDiscount()">${S.disc?'Sale discount'+(S.discPct?' ('+S.disc+'%)':''):'Sale discount +'}</button><span>${t.odisc?'−'+peso(t.odisc):''}</span></div>${overCap(t)?`<div class="capwarn">Discount ${t.pct.toFixed(1)}% is over the ${discCap()}% cashier limit — owner PIN needed at payment.</div>`:''}
  <div class="row total"><span>Total</span><span>${peso(t.total)}</span></div><div class="pays">${PAYS.map(p=>`<button class="btn pay" ${c.length?'':'disabled'} onclick="checkout('${p}')">${p==='Cash'?'Cash · '+peso(t.total):p}</button>`).join('')}</div></div>`;
- const f=$('#cartfab');if(f){f.innerHTML=`${ic('sell')}<span>${c.reduce((a,l)=>a+l.qty,0)} items</span><b>${peso(t.total)}</b>`;f.classList.toggle('show',c.length>0)}}
-function toggleCart(o){$('#cart')?.classList.toggle('open',o)}
+ const f=$('#cartfab');if(f){f.innerHTML=`${ic('sell')}<span>${c.reduce((a,l)=>a+l.qty,0)} items</span><b>${peso(t.total)}</b>${c.length?`<span class="cfclear" role="button" aria-label="Clear sale" onclick="event.stopPropagation();cancelSale()">✕ Clear</span>`:''}`;f.classList.toggle('show',c.length>0)}}
+function toggleCart(o){const el=$('#cart');if(!el)return;const was=el.classList.contains('open');el.classList.toggle('open',o);const sheet=getComputedStyle(el).position==='fixed';
+ if(o&&!was&&sheet){try{history.pushState({cart:1},'')}catch(e){}}else if(!o&&was&&history.state&&history.state.cart){try{history.back()}catch(e){}}}
+(function(){const b=document.createElement('button');b.className='totop';b.id='totop';b.title='Back to top';b.setAttribute('aria-label','Back to top');b.innerHTML='<b>↑</b>Top';
+ const sc=()=>Math.max(window.scrollY||0,(document.querySelector('main')||{}).scrollTop||0);
+ const upd=()=>{b.classList.toggle('show',sc()>400);document.body.classList.toggle('hasfab',!!document.querySelector('.cartfab.show'))};
+ b.onclick=()=>{const m=document.querySelector('main');if(m)m.scrollTo({top:0,behavior:'smooth'});window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{const q=document.querySelector('#q');if(q&&innerWidth>900)q.focus()},350)};
+ document.addEventListener('scroll',upd,true);addEventListener('resize',upd);const go0=()=>{document.body.appendChild(b);upd()};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',go0):go0()})();
+addEventListener('popstate',()=>{const el=$('#cart');if(el&&el.classList.contains('open'))el.classList.remove('open')});
 function addToCart(pid){const p=S.products.get(pid);if(!p)return;if(!hasPrice(p)&&hasLoose(p))return addLoose(pid);if(!hasPrice(p)){if(isOwner())return quickPrice(pid,true);return toast('No selling price yet — ask the owner','bad')}let from=S.branch;
  if(p.reserveOnly&&!curBranch().isMain){from=mainBranch().id;toast('Reserve-only item — stock will be deducted from '+mainBranch().name,'warn')}
  const ex=S.cart.find(l=>l.pid===pid&&l.from===from&&!l.bulk&&!l.loose&&!l.order);const used=S.cart.filter(l=>l.pid===pid&&l.from===from&&!l.loose&&!l.order).reduce((a,l)=>a+l.qty*(l.mult||1),0);const want=used+1;const st=stockOf(pid,from);

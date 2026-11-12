@@ -151,8 +151,10 @@ Format: CATEGORY-TYPE-SIZE-VARIANT, e.g. CM-CEM-40KG, LP-MPW-12MM, AD-CC-1L-RUG.
 
 ## Cart
 - **−** reduces the quantity (at 0 the item is removed), **+** adds, or type the quantity.
-- **✕** on a line removes that item.
-- **Cancel sale** (top of the cart) clears the whole order after a confirm — nothing is charged, stock unchanged.
+- Red **✕** on a line removes that item.
+- **Cancel sale** (top of the cart) or **✕ Clear** on the orange cart bar clears the whole order after a confirm — nothing is charged, stock unchanged.
+- Phone: **← Back** (or the phone's back gesture) closes the cart and returns to the items.
+- **↑ Top** button appears after scrolling down any list — tap it to jump back to the search box.
 
 ## Discounts
 - Per item: tap the line in the cart → Discount on this item → % off, ₱ off each piece, or ₱ off whole line → quick 5/10/15/20%. Preview shows the peso discount before Update.
