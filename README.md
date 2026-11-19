@@ -42,6 +42,8 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - If a phone with the app is lost: create a new publishable key in Supabase (Project Settings → API), revoke the old one, and paste the new key on the remaining devices.
 
 ## Receiving deliveries (Stock In)
+- **No duplicate invoice / DR:** if the same invoice / DR no. from the same supplier was already received, a red notice shows (date, branch, items, total, who received it) and **Receive** is blocked. Spaces, dashes and leading zeros are ignored (DR-001234 = DR 1234).
+- The screen no longer zooms in when you tap a box.
 1. Stock In → Receive delivery → Take photo of receipt / DR → AI reads supplier, invoice no., date and every line.
 2. Everything is pre-filled for you to check: supplier (matched to your existing suppliers), invoice no., date, and per line qty, units, pack, cost, category, brand and a suggested sell price (tagged "suggested"). Each line is matched to your products (✓ SKU) or marked NEW; supplier item codes and printed barcodes are remembered for next time. Wrong match → "not this item?". The app remembers each supplier's wording for next time.
 3. Bulk: Buy unit + pack qty, e.g. 2 box × 100 pc = 200 pc in stock; 1 roll × 150 m = 150 m. Cost per selling unit is calculated.
@@ -108,6 +110,7 @@ The AI decides for every roll / box / bag / pail / pack item how it is sold — 
 - **Tingi:** wire/hose/rope/chain per **m**, nails/tie wire/welding rod per **kg**, screws/bolts/rivets per **pc**, sandpaper per sheet → tingi boxes open, unit and contents filled ("AI est." — check them), price suggested.
 - Runs automatically on **receiving lines** and in the **product form** ("✨ AI: usually sold per m · about 150 m in 1 roll — Set up tingi").
 - Products → **✨ Tingi check (n)** sorts all existing items at once; review, edit contents/prices, untick mistakes, then Apply.
+- **Paint is always whole:** paint, enamel, latex, primer, lacquer, varnish, epoxy, elastomeric (Boysen, Davies, Rain or Shine…) are set to whole instantly, without asking the AI. Tingi is unticked; ticking it asks "Sell this item tingi anyway?" (owner choice). Brushes, rollers, tape and thinner are not covered by this rule.
 - Each decision is remembered per product, so the AI is asked only once. Needs Cloud sync (runs on your server).
 
 ## Two selling prices at receiving
