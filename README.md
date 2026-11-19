@@ -46,6 +46,9 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - **Undo:** each line has ↶ (undo the last change on that line); **↶ Undo** next to Add line undoes the last action (removed line, added lines, suggested prices). Product form has **↶ Undo** too (last changed box).
 - **Tingi on/off:** an open tingi section has "✕ No tingi — sell whole … only"; a closed one has "＋ sell tingi". ↶ brings back the previous choice.
 - **Bought per pc, sold per box** (e.g. screws ₱0.24/pc, 500 pc per box, ₱350/box): Buy unit = pc, Sell unit = box → the line asks **box received** and shows "500 pc each · ₱120/box". Not tingi. The 500 is remembered for the next delivery.
+- **Received by:** the AI reads the receiver's name on the DR. If it cannot read it (signature only), the signature is cut out of the photo and kept with the delivery. No signature on the DR? Tap **✍ Receiver signs here** and sign with a finger. Shown in Stock In → the delivery.
+- **Stock on every line:** "stock 5 → 7 box" (now → after receiving into the chosen branch). After Receive, a message lists the new stock.
+- **New delivery price wins:** the newest delivery cost becomes the item's cost (the old average is kept as avgCost for reference). If the cost changed, the sell price is updated with the same markup — line shows "new price ₱1,430 (was ₱1,300)"; edit it if needed.
 - **No duplicate invoice / DR:** if the same invoice / DR no. from the same supplier was already received, a red notice shows (date, branch, items, total, who received it) and **Receive** is blocked. Spaces, dashes and leading zeros are ignored (DR-001234 = DR 1234).
 - The screen no longer zooms in when you tap a box.
 1. Stock In → Receive delivery → Take photo of receipt / DR → AI reads supplier, invoice no., date and every line.
@@ -55,7 +58,7 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 5. Receive → stock added, costs updated, receipt photo kept. Items needing a price go to Price review.
 
 ## Costing (retail standard)
-- Average cost (moving weighted average) = cost used for profit and stock value. Updated on every delivery.
+- **Latest delivery cost** = cost used for profit, stock value and price suggestions (newest supplier price supersedes the old). The moving average is still kept per item as avgCost.
 - Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
 - Every product must have a cost. Products → "Missing cost" filter finds gaps.
 

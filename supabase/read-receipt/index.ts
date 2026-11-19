@@ -22,6 +22,8 @@ function buildPrompt(cats: string[]) {
     'brand = manufacturer/brand if shown, else "". category = best fit from this list: ' + (cats.length ? cats.join(" | ") : "Paint | Plumbing | Electrical | Fasteners | Tools | Steel | Lumber & Plywood | Cement & Masonry | Roofing | Adhesives & Sealants | Uncategorized") + '. ' +
     'item_code = supplier item/product code for the line if printed, else "". barcode = product barcode digits if printed, else "". ' +
     'supplier = the SELLER company name printed at the top (not the buyer). invoice_no = document number. date = document date as YYYY-MM-DD ("" if none). total = grand total printed (0 if none). ' +
+    'received_by = the name written or printed next to "Received by" / "Received the above in good order" / receiver signature, cleaned up; "" if there is no such name or it is only an unreadable signature. ' +
+    'sig_box = where the receiver signature / "Received by" area is on the photo, as [left, top, right, bottom] fractions of image width and height (0 to 1), a little larger than the signature; [] if there is no receiver signature. ' +
     'Numbers only, no commas or currency symbols. Skip VAT, discount, subtotal and total rows as lines. Ignore handwritten notes that have no quantity and price. ' +
     'Before answering, check that qty x unit_cost matches each printed amount and that the amounts add up to the total; re-read any line that does not.';
 }
@@ -32,9 +34,10 @@ const LINE_PROPS = {
   unit_cost: { type: "number" }, amount: { type: "number" },
 };
 const SCHEMA = {
-  type: "object", additionalProperties: false, required: ["supplier", "invoice_no", "date", "total", "lines"],
+  type: "object", additionalProperties: false, required: ["supplier", "invoice_no", "date", "total", "received_by", "sig_box", "lines"],
   properties: {
     supplier: { type: "string" }, invoice_no: { type: "string" }, date: { type: "string" }, total: { type: "number" },
+    received_by: { type: "string" }, sig_box: { type: "array", items: { type: "number" } },
     lines: { type: "array", items: { type: "object", additionalProperties: false, required: Object.keys(LINE_PROPS), properties: LINE_PROPS } },
   },
 } as const;
@@ -42,6 +45,8 @@ const SCHEMA = {
 function tidy(o: any) {
   if (Array.isArray(o)) o = { lines: o };
   o.lines = o.lines || o.items || o.line_items || [];
+  o.received_by = String(o.received_by || "").trim();
+  o.sig_box = Array.isArray(o.sig_box) && o.sig_box.length === 4 && o.sig_box.every((n: any) => typeof n === "number" && n >= 0 && n <= 1) ? o.sig_box : [];
   return o;
 }
 
@@ -98,7 +103,7 @@ async function readWithGemini(image: string, mime: string, cats: string[], deadl
   const key = Deno.env.get("GEMINI_API_KEY") || sec?.value || "";
   if (!key) throw new Error("No Gemini key saved");
   const models = [...new Set([d.aiModel, ...GEMINI_MODELS].filter((m) => m && !/^gemini-(1|2)\./.test(m)))];
-  const prompt = buildPrompt(cats) + ' Return ONLY JSON: {"supplier":string,"invoice_no":string,"date":"YYYY-MM-DD","total":number,"lines":[{"name","qty","unit","pack_qty","piece_unit","brand","category","item_code","barcode","unit_cost","amount"}]}';
+  const prompt = buildPrompt(cats) + ' Return ONLY JSON: {"supplier":string,"invoice_no":string,"date":"YYYY-MM-DD","total":number,"received_by":string,"sig_box":[left,top,right,bottom],"lines":[{"name","qty","unit","pack_qty","piece_unit","brand","category","item_code","barcode","unit_cost","amount"}]}';
   let think = true, mi = 0, lastErr = "";
   for (let attempt = 0; attempt < 10; attempt++) {
     const left = deadline - Date.now();
