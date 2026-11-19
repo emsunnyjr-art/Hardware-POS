@@ -79,6 +79,14 @@ Use an item stocked per m with "Price / 1 roll" set (e.g. THHN 2.0mm: ₱35/m, �
 
 **Expected:** receipt line says "(ORDER – for delivery)". Stock does not change. Close / Day report lists it under **ORDERS TO FETCH**.
 
+### B8. Credit sale (utang) and collection
+1. Sell 10 bags cement → **Credit (utang)** → customer "Test Contractor" (new) → company, type Contractor → down payment 500 → 60 days → 2 installments → 3% per month.
+2. Check the summary, then Complete credit sale. Print the receipt.
+3. Customers tab → Test Contractor → Receive payment ₱1,000 Cash.
+4. Close → enter starting cash.
+
+**Expected:** step 1 shows interest 3% × 2 mo = 6% and the peso amount, total to collect, 2 due dates. Receipt shows CREDIT / UTANG, due dates and a signature line. Step 3: balance drops by ₱1,000, % paid updates, payment receipt prints. Step 4: expected cash includes the ₱500 down payment and the ₱1,000 collected. A cashier selling on credit to a new customer is asked for the owner PIN (cashier PIN refused).
+
 ---
 
 ## C. Offline and sync

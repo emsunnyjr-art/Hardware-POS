@@ -62,6 +62,17 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
 - Every product must have a cost. Products → "Missing cost" filter finds gaps.
 
+## Customers & credit (utang)
+- **Every sale can keep the customer:** type a name at payment. New names become a customer profile (company, type, mobile). Known names show their profile and what they owe.
+- **Customer types** (for clean reports): Walk-in, Regular, Contractor, Business / Company, Government, Employee / Staff.
+- **Credit sale** (pay button **Credit (utang)**): customer required · down payment (cash) · pay within 7–90 days · 1 to 12 payments · interest % per month. Live: interest in % and ₱, total to collect, due dates, what the customer will owe in total, warnings (over limit, overdue, not approved).
+- **Control:** a cashier needs the owner PIN for a customer not yet approved for credit or over the credit limit. Owner sets credit allowed / limit / usual terms / interest in the customer profile. Store defaults: Settings → Credit terms and interest.
+- **Receipt** shows the credit terms, due dates and a customer signature line.
+- **Customers tab:** to collect, overdue, collected this month; list grouped by customer type; tap a customer → balance, % paid per sale, **Receive payment** (Cash / GCash / Bank / Check, oldest due first, prints a payment receipt), **Statement** of account.
+- **Close shift:** down payments and cash collections of utang are added to the expected drawer cash.
+- **Reports** (Today, This week, This month, Last month, This year…): credit share of sales %, down payments, interest to earn, collections by method, still to collect / overdue; sales % by payment, by customer type and by category; transactions show % paid. Same in the printed Day report and Export CSV.
+- No database change needed: customer profiles sync as shared records.
+
 ## Close shift / End of day
 - Close (bottom bar / sidebar) — cashiers and owner. Covers sales since the branch's last close (or start of today).
 - Enter starting cash (float), count bills/coins by denomination, add cash paid out → Expected vs Counted → BALANCED / OVER / SHORT.
