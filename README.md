@@ -43,6 +43,9 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 
 ## Receiving deliveries (Stock In)
 - **Receive button** stays grey until at least one line has name, qty and cost; it shows how many items will be received. Incomplete lines are skipped (listed in the confirm). Untick **POS** on a line to leave that DR item out of the POS.
+- **Undo:** each line has ↶ (undo the last change on that line); **↶ Undo** next to Add line undoes the last action (removed line, added lines, suggested prices). Product form has **↶ Undo** too (last changed box).
+- **Tingi on/off:** an open tingi section has "✕ No tingi — sell whole … only"; a closed one has "＋ sell tingi". ↶ brings back the previous choice.
+- **Bought per pc, sold per box** (e.g. screws ₱0.24/pc, 500 pc per box, ₱350/box): Buy unit = pc, Sell unit = box → the line asks **box received** and shows "500 pc each · ₱120/box". Not tingi. The 500 is remembered for the next delivery.
 - **No duplicate invoice / DR:** if the same invoice / DR no. from the same supplier was already received, a red notice shows (date, branch, items, total, who received it) and **Receive** is blocked. Spaces, dashes and leading zeros are ignored (DR-001234 = DR 1234).
 - The screen no longer zooms in when you tap a box.
 1. Stock In → Receive delivery → Take photo of receipt / DR → AI reads supplier, invoice no., date and every line.
