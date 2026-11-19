@@ -26,6 +26,8 @@ h2{margin:0;font-size:22px;letter-spacing:-.02em}h3{margin:0 0 14px;font-size:18
 .mute{color:var(--mute)}.small,small{font-size:12px}.grow{flex:1}.c{text-align:center}.b{font-weight:700}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;font-weight:600;min-height:42px;white-space:nowrap}
 .btn:hover{border-color:var(--mute)}.btn:disabled{opacity:.4;pointer-events:none}
+.pu_top{position:sticky;top:-20px;z-index:5;background:var(--card);margin:-20px -20px 12px;padding:14px 20px 10px;border-bottom:1px solid var(--line);align-items:center}
+@media(max-width:760px){.pu_top{top:-18px;margin:-18px -16px 12px;padding:12px 16px 10px}}
 #cr_sum .rr,#cp_prev .rr{display:flex;justify-content:space-between;gap:10px;padding:1px 0}
 .pbar{display:inline-block;width:80px;max-width:100%;height:6px;border-radius:4px;background:var(--soft);vertical-align:middle;overflow:hidden}.pbar i{display:block;height:100%;background:var(--acc);border-radius:4px}
 #pu_ok:disabled{background:#9aa0a6;border-color:#9aa0a6;color:#fff;opacity:.75;filter:none}
@@ -268,7 +270,7 @@ const DB={db:null,
  clear(){return this.rq(this.st('readwrite').clear())}};
 
 const CFG=(()=>{try{return JSON.parse(localStorage.getItem('tpos_cfg')||'{}')}catch(e){return{}}})();
-const aiKey=()=>CFG.aiKey||'';const APP_VER='42';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
+const aiKey=()=>CFG.aiKey||'';const APP_VER='43';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
 function saveCfg(){try{localStorage.setItem('tpos_cfg',JSON.stringify(CFG))}catch(e){}}
 if(!CFG.dev){CFG.dev=Math.random().toString(36).slice(2,4).toUpperCase();saveCfg()}
 
@@ -943,7 +945,7 @@ function dupInvoice(inv,sup,skipId){const k=invKey(inv);if(!k)return null;const 
 const dupInvMsg=p=>`Invoice / DR no. ${p.invNo} was already received${p.supplier?' from '+p.supplier:''} on ${fmtD(p.date||p.ts)} (${brName(p.branch)}, ${(p.lines||[]).length} item${(p.lines||[]).length===1?'':'s'}, ${peso(+p.total||0)}${p.user?', by '+p.user:''}).`;
 function newPurchase(){const P={id:uid(),date:ymd(Date.now()),branch:S.branch,lines:[],receipt:null};
  const sups=[...new Set([...S.purchases.values()].map(p=>p.supplier).filter(Boolean))];
- const m=modal(`<h3>Receive delivery</h3>
+ const m=modal(`<div class="row pu_top"><h3 style="margin:0">Receive delivery</h3><span class="grow"></span><button class="btn sm" data-close>✕ Cancel</button></div>
  <div class="g2" style="align-items:start"><div><label class="upl" id="pu_up">${ic('camera',28)}<br><b>Take photo of receipt / DR</b><br><small>AI reads the items for you</small><input type="file" accept="image/*" capture="environment" id="pu_f" hidden></label><div class="c small" id="pu_alt"><label class="link" style="display:inline;color:var(--acc);font-size:13px">or choose a saved photo<input type="file" accept="image/*" id="pu_f2" hidden></label></div><div id="pu_img"></div><p class="small b" id="pu_st" style="margin:8px 0 0;min-height:0"></p><button class="btn" id="pu_ai" style="width:100%;margin-top:8px;display:none">${ic('spark',18)} Read receipt with AI</button></div>
  <div><label>Supplier<input id="pu_s" list="pu_sl" autocomplete="off"></label><datalist id="pu_sl">${sups.map(s=>`<option value="${esc(s)}">`).join('')}</datalist><label>Invoice / DR no.<input id="pu_i" autocomplete="off"></label><label>Date<input type="date" id="pu_d" value="${P.date}"></label><label>Received by<input id="pu_rb" autocomplete="off" placeholder="name of staff who received"></label><div id="pu_sig" class="small"></div><p class="small" id="pu_iw" style="display:none;margin:2px 0 6px;padding:8px 10px;border-radius:8px;background:var(--bad-soft,#fde8e8);color:var(--bad);font-weight:600"></p><label>Receive into${brSelect(P.branch,'','',false).replace('<select','<select id="pu_b"')}</label></div></div>
  <div id="pu_lines"></div>
@@ -953,7 +955,7 @@ function newPurchase(){const P={id:uid(),date:ymd(Date.now()),branch:S.branch,li
  <div class="row end"><button class="btn" data-close>Cancel</button><button class="btn primary" id="pu_ok">Receive &amp; add to stock</button></div>`,'full',{lock:true});
  const g=s=>m.querySelector(s);
  const sigDraw=()=>{const el=g('#pu_sig');if(!el)return;el.innerHTML=P.sig?`<div class="row" style="align-items:center;gap:8px;margin:2px 0 6px"><img src="${P.sig}" alt="receiver signature" style="max-height:56px;max-width:60%;background:#fff;border:1px solid var(--line);border-radius:6px"><span class="grow mute">${P.sigFrom==='dr'?'Signature from the DR (name not readable)':'Signed on this phone'}</span><button class="btn icon sm" id="pu_sigx" title="Remove signature">${ic('x',14)}</button></div>`:`<button class="link small" id="pu_sign" style="margin:0 0 6px">✍ Receiver signs here</button>`;const x=g('#pu_sigx');if(x)x.onclick=e=>{e.preventDefault();P.sig=null;sigDraw()};const sg=g('#pu_sign');if(sg)sg.onclick=async e=>{e.preventDefault();const d=await signPad('Receiver signature');if(d){P.sig=d;P.sigFrom='pad';sigDraw();toast('Signature added','ok')}}};sigDraw();
- const invChk=()=>{const d=dupInvoice(g('#pu_i').value,g('#pu_s').value,P.id),w=g('#pu_iw');w.style.display=d?'':'none';w.textContent=d?'⚠ DUPLICATE — '+dupInvMsg(d)+' The same invoice / DR cannot be received twice.':'';g('#pu_i').style.borderColor=d?'var(--bad)':'';return d};
+ const invChk=()=>{const d=dupInvoice(g('#pu_i').value,g('#pu_s').value,P.id),w=g('#pu_iw');w.style.display=d?'':'none';w.textContent=d?'⚠ DUPLICATE — '+dupInvMsg(d)+' The same invoice / DR cannot be received twice.':'';g('#pu_i').style.borderColor=d?'var(--bad)':'';typeof okState==='function'&&okState();return d};
  ['input','change'].forEach(ev=>{g('#pu_i').addEventListener(ev,invChk);g('#pu_s').addEventListener(ev,invChk)});g('#pu_b').addEventListener('change',()=>draw());
  const invSync=l=>{const p=l.pid&&S.products.get(l.pid);const su=p?(p.unit||'pc'):(l.sellUnit||'pc'),u=l.unit||'';
   const inv=!!u&&(isMeasure(u)||(unitKey(u)==='pc'&&isContainer(su)))&&unitKey(u)!==unitKey(su)&&!(p&&p.buyUnit&&unitKey(p.buyUnit)===unitKey(u)&&PACK(p)>1);
@@ -961,7 +963,7 @@ function newPurchase(){const P={id:uid(),date:ymd(Date.now()),branch:S.branch,li
   l.whole=!isMeasure(su)&&!(p&&p.looseOn);if(l.whole&&!l.uTouched){const q=+l.qty||0;l.units=l.contents>0&&q>0?Math.max(1,Math.round(q/l.contents)):(+l.units||0)}};
  const PKL=l=>l.inv?(l.whole?(+l.units>0&&+l.qty>0?l.units/l.qty:0):(+l.contents>0?1/l.contents:0)):Math.max(1,+l.pack||1);
  const lineOK=(l,el)=>{if(l.skip)return 0;const v=k=>{const x=el&&el.querySelector(`input[data-k=${k}]`);return x?x.value:l[k]};const any=['name','qty','cost'].some(k=>String(v(k)??'').trim()&&String(v(k))!=='0');if(!any)return 0;return String(v('name')||'').trim()&&num(v('qty'))>0&&num(v('cost'))>0?2:1};
- const okState=()=>{const b=g('#pu_ok');if(!b)return;let n=0,part=0;P.lines.forEach((l,i)=>{const r=lineOK(l,g(`.rl[data-i="${i}"]`));if(r===2)n++;else if(r===1)part++});b.disabled=!n;b.textContent=n?`Receive ${n} item${n>1?'s':''} & add to stock`:'Receive & add to stock';b.title=n?(part?part+' incomplete line(s) will be skipped':''):'Enter at least one item: name, qty and cost'};
+ const okState=()=>{const b=g('#pu_ok');if(!b)return;let n=0,part=0;P.lines.forEach((l,i)=>{const r=lineOK(l,g(`.rl[data-i="${i}"]`));if(r===2)n++;else if(r===1)part++});const dup=dupInvoice(g('#pu_i').value,g('#pu_s').value,P.id);b.disabled=!n||!!dup;b.textContent=dup?'Duplicate DR — cannot receive':n?`Receive ${n} item${n>1?'s':''} & add to stock`:'Receive & add to stock';if(dup)b.title='This invoice / DR was already received';b.title=n?(part?part+' incomplete line(s) will be skipped':''):'Enter at least one item: name, qty and cost'};
  const H=[],known=new Set();let pend=null;const cl=o=>JSON.parse(JSON.stringify(o)),kOf=l=>l._k||(l._k=uid());
  const hPush=e=>{H.push(e);if(H.length>300)H.shift()};const snapL=l=>hPush({k:kOf(l),prev:cl(l),nm:l.name});const snapAll=t=>hPush({all:cl(P.lines),t});
  const setL=(l,v)=>{Object.keys(l).forEach(x=>delete l[x]);Object.assign(l,v)};
