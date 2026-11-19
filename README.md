@@ -42,6 +42,7 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - If a phone with the app is lost: create a new publishable key in Supabase (Project Settings → API), revoke the old one, and paste the new key on the remaining devices.
 
 ## Receiving deliveries (Stock In)
+- **Receive button** stays grey until at least one line has name, qty and cost; it shows how many items will be received. Incomplete lines are skipped (listed in the confirm). Untick **POS** on a line to leave that DR item out of the POS.
 - **No duplicate invoice / DR:** if the same invoice / DR no. from the same supplier was already received, a red notice shows (date, branch, items, total, who received it) and **Receive** is blocked. Spaces, dashes and leading zeros are ignored (DR-001234 = DR 1234).
 - The screen no longer zooms in when you tap a box.
 1. Stock In → Receive delivery → Take photo of receipt / DR → AI reads supplier, invoice no., date and every line.
