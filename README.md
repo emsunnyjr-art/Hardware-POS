@@ -47,6 +47,7 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - **Tingi on/off:** an open tingi section has "✕ No tingi — sell whole … only"; a closed one has "＋ sell tingi". ↶ brings back the previous choice.
 - **Bought per pc, sold per box** (e.g. screws ₱0.24/pc, 500 pc per box, ₱350/box): Buy unit = pc, Sell unit = box → the line asks **box received** and shows "500 pc each · ₱120/box". Not tingi. The 500 is remembered for the next delivery.
 - **Received by:** the AI reads the receiver's name on the DR. If it cannot read it (signature only), the signature is cut out of the photo and kept with the delivery. No signature on the DR? Tap **✍ Receiver signs here** and sign with a finger. Shown in Stock In → the delivery.
+- **Current stock shows as soon as an item is matched** (typed, scanned or read from the DR): "In stock now: 5 box + 30 pc open · all branches 12" — red when out, orange when at reorder level.
 - **Stock on every line:** "stock 5 → 7 box" (now → after receiving into the chosen branch). After Receive, a message lists the new stock.
 - **New delivery price wins:** the newest delivery cost becomes the item's cost (the old average is kept as avgCost for reference). If the cost changed, the sell price is updated with the same markup — line shows "new price ₱1,430 (was ₱1,300)"; edit it if needed.
 - **✕ Cancel** is also at the top of Receive delivery (stays visible while scrolling).
