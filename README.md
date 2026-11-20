@@ -81,6 +81,12 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Past closings listed on the Close screen; owner sees them under Reports → Shift closings.
 - Reports → Day report: one-page sales report for the selected period and branch (no cash count).
 
+## Up to 3 selling levels (case → box → pc / kg)
+- Example: 1 case = 3 boxes, 1 box = 100 pc. Product: Sell unit **box** · Bigger pack **case**, **3** box in 1 bigger pack, price per case · **Whole + tingi** per **pc**, 100 in 1 box, price per pc.
+- Product form shows the levels live: "📦 Sold in 3 levels: 1 case = 3 box · ₱2,700 → 1 box · ₱950 → per pc (100 in 1 box) · ₱12 · 1 case = 300 pc".
+- Sell screen: a wide tile with 3 buttons (1 case · 1 box · per pc). Stock is counted in boxes; selling per pc opens a box automatically.
+- Receiving per case: line asks box in 1 case, sell price per case and per box, and the tingi (per pc) choice.
+
 ## Bulk price (roll / box / sack)
 - Product → Bulk unit (e.g. roll), Sell units per bulk unit (e.g. 150 m), Bulk price (e.g. 4,700).
 - Sell screen: tap "by roll ₱4,700" under the cart line to switch; stock drops by 150 m. Tap again to go back to per-meter.
@@ -124,6 +130,7 @@ For items stocked as a sealed roll/box/pack but also sold per meter, piece or kg
 - Searching "furring red" works. Supplier CSV download has a Color/grade column.
 
 ## AI: whole only or tingi?
+- **You decide, AI helps:** every roll / box / gal / pail item has **Sell how? [Whole only] [Whole + tingi]** — in Receive delivery lines and in the product form. The AI (or the paint rule) pre-selects and shows its advice next to it ("✨ AI suggests tingi per m (about 150)"). Your tap always wins and is remembered ("your choice"); ↶ undoes it. Other items show "＋ Can be sold tingi?".
 The AI decides for every roll / box / bag / pail / pack item how it is sold — no manual sorting:
 - **Whole only:** paint, thinner, sealant/epoxy, cement and other bags, tools, fittings… → no tingi boxes, line shows "✨ AI: sold whole" (+ "sell tingi anyway" if you disagree).
 - **Tingi:** wire/hose/rope/chain per **m**, nails/tie wire/welding rod per **kg**, screws/bolts/rivets per **pc**, sandpaper per sheet → tingi boxes open, unit and contents filled ("AI est." — check them), price suggested.
