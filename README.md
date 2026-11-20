@@ -65,6 +65,12 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
 - Every product must have a cost. Products → "Missing cost" filter finds gaps.
 
+## Delivery Receipt (DR) printing
+- **From a sale:** receipt → **DR** → fills Delivered to (customer / company), TIN, address, terms (cash or credit days), DR No. (next number), date. Add P.O. No. Choose **Large 135 × 210 mm** (20 rows) or **Small 135 × 105 mm** (6 rows; picked automatically for few items). Optional prices and total. Live preview, then **Print DR**. The DR No. is saved on the sale (reprint keeps the same number).
+- **Manual DR / blank pads:** Settings → Store & receipt → **New DR (manual)** (type items: `10 bag Portland Cement`), **Print blank DR 135×210 / 135×105** for hand-written pads.
+- Header uses Store name, Address, TIN (VAT Reg. when ticked) and **Proprietor**; set **Next DR No.** to continue your paper pad series. More than 20 items → continues on page 2.
+- Printing: choose your printer's paper size 135 × 210 mm (or 135 × 105 mm), scale 100%, margins none.
+
 ## Customers & credit (utang)
 - **Every sale can keep the customer:** type a name at payment. New names become a customer profile (company, type, mobile). Known names show their profile and what they owe.
 - **Customer types** (for clean reports): Walk-in, Regular, Contractor, Business / Company, Government, Employee / Staff.
