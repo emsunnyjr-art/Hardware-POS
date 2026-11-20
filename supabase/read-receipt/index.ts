@@ -1,6 +1,6 @@
 // Tindero POS: server-side AI reader. Triggered by insert into public.pos_ai_jobs.
 // Primary: Claude (ANTHROPIC_API_KEY edge-function secret). Backup for receipts: Google Gemini (pos_secrets / GEMINI_API_KEY, never readable by the app).
-// Tasks: receipt photo (default), "pricelist" (supplier price list pages, with color/grade), "loose" (tingi price), "sellmode" (whole vs tingi per item).
+// Tasks: receipt photo (default), "pricelist" (supplier price list pages, with color/grade), "loose" (tingi price), "sellmode" (whole vs tingi per item), "payref" (GCash / bank payment screenshot).
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk@1.6.0";
 
@@ -291,7 +291,50 @@ async function sellMode(t: any, deadline: number) {
   throw new Error(lastErr || "Claude unavailable");
 }
 
+// ---- Payment proof (GCash / Maya / bank transfer screenshot): read reference no., amount, date. cats = {task:"payref"}
+const PR_SCHEMA = { type: "object", additionalProperties: false, required: ["is_payment", "method", "ref", "amount", "date", "time", "sender", "receiver", "note"],
+  properties: { is_payment: { type: "boolean" }, method: { type: "string" }, ref: { type: "string" }, amount: { type: "number" }, date: { type: "string" }, time: { type: "string" }, sender: { type: "string" }, receiver: { type: "string" }, note: { type: "string" } } } as const;
+async function readPayRef(job: { image: string }, deadline: number) {
+  if (!ANTHROPIC_API_KEY) throw new Error("no Claude key");
+  const { img, mime } = await loadImage(job.image);
+  const prompt = "This is a screenshot or photo of a Philippine e-wallet or bank payment confirmation (GCash, Maya, InstaPay, PESONet, BDO, BPI, Metrobank, UnionBank, LandBank, etc.). " +
+    "is_payment = true only if it shows a completed payment/transfer. method = app or bank name (e.g. GCash, Maya, BDO, BPI, InstaPay). " +
+    "ref = the transaction reference number exactly as printed, digits/letters only without spaces (GCash: 'Ref No.' 13 digits; banks: reference / trace / transaction no.). " +
+    "amount = amount paid/sent in PHP (number, no commas). date = YYYY-MM-DD, time = HH:MM 24h, '' if not shown. sender = name or masked number of the payer if shown, receiver = recipient name or account if shown. " +
+    "note = '' or a short warning if the image looks edited, incomplete, pending or failed. Never invent a reference number: use '' if not readable.";
+  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY, timeout: 60_000, maxRetries: 1 });
+  let lastErr = "";
+  for (const model of CLAUDE_MODELS) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (Date.now() > deadline - 5000) throw new Error(lastErr || "out of time");
+      try {
+        const res: any = await client.messages.create({ model, max_tokens: 1200, output_config: { format: { type: "json_schema", schema: PR_SCHEMA } },
+          messages: [{ role: "user", content: [{ type: "image", source: { type: "base64", media_type: mime as any, data: img } }, { type: "text", text: prompt }] }] } as any);
+        const text = (res.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
+        const o = JSON.parse(text); o.ref = String(o.ref || "").replace(/\s+/g, "");
+        return { ...o, _model: model };
+      } catch (e: any) {
+        const msg = String(e?.message ?? e); lastErr = "Claude: " + msg.slice(0, 200); const st = e?.status;
+        if (st === 404 || /model/i.test(msg) && st === 400) break;
+        if (st === 429 || st === 529 || (st ?? 500) >= 500) { await sleep([1500, 4000, 8000][attempt]); continue; }
+        throw new Error(lastErr);
+      }
+    }
+  }
+  throw new Error(lastErr || "Claude unavailable");
+}
+
 async function processJob(job: { id: string; image: string; cats: any }) {
+  if (job.cats && !Array.isArray(job.cats) && job.cats.task === "payref") {
+    try {
+      const out: any = await readPayRef(job, Date.now() + 90_000);
+      const model = out._model; delete out._model;
+      await sb.from("pos_ai_jobs").update({ status: "done", result: out, model, image: null, cats: { task: "payref" }, updated_at: new Date().toISOString() }).eq("id", job.id);
+    } catch (e) {
+      await sb.from("pos_ai_jobs").update({ status: "error", error: (e as Error).message.slice(0, 500), image: null, cats: { task: "payref" }, updated_at: new Date().toISOString() }).eq("id", job.id);
+    }
+    return;
+  }
   if (job.cats && !Array.isArray(job.cats) && job.cats.task === "sellmode") {
     try {
       const out: any = await sellMode(job.cats, Date.now() + 100_000);

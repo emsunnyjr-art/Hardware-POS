@@ -65,6 +65,14 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
 - Every product must have a cost. Products → "Missing cost" filter finds gaps.
 
+## GCash / Maya / bank payments with QR and proof
+- **Settings → Payment QR:** add your GCash / Maya / bank QR (upload a screenshot of your "Receive money" QR), account name and number. Add as many as you have.
+- **At payment:** tap **GCash / Maya** or **Bank transfer** → the QR, account name/number and amount show (tap the QR to show it big for the customer). Several accounts → pick one.
+- **📷 Payment receipt:** after the customer pays, upload their confirmation screenshot (or take a photo of their screen). The AI reads the **reference no.** (also amount, date, sender) and fills it in. Warnings: amount does not match, reference already used on another sale (same screenshot used twice), not a completed payment.
+- The proof image is kept with the sale (receipt → **📎 Proof**). Works for utang payments too (Customers → Receive payment → GCash / Bank).
+- **Discount on total:** the 🏷 button under the subtotal: % or ₱, quick 5% / 10% and "Round to ₱…".
+- Receipt title is now just **ACKNOWLEDGEMENT RECEIPT**.
+
 ## Delivery Receipt (DR) printing
 - **From a sale:** receipt → **DR** → fills Delivered to (customer / company), TIN, address, terms (cash or credit days), DR No. (next number), date. Add P.O. No. Choose **Large 135 × 210 mm** (20 rows) or **Small 135 × 105 mm** (6 rows; picked automatically for few items). Optional prices and total. Live preview, then **Print DR**. The DR No. is saved on the sale (reprint keeps the same number).
 - **Manual DR / blank pads:** Settings → Store & receipt → **New DR (manual)** (type items: `10 bag Portland Cement`), **Print blank DR 135×210 / 135×105** for hand-written pads.
