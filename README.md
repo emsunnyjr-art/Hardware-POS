@@ -71,6 +71,7 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - List: **ready** / **check** (duplicate DR, lines ≠ total, missing cost or date, nothing read) / **received ✓** / errors (Retry) / skipped.
 - **Auto-receive all clean** receives the ready ones **oldest date first** (so the newest cost wins; older DRs follow the history-only rule). Receipts with warnings are left for you: **Open** shows the normal Receive form filled in.
 - New items are created **without a selling price** — set them later in Stock In → **Price review** (or Products → No price). Existing items keep / update price by the normal rules.
+- **Delete duplicates (N)** removes duplicate photos in one tap (✕ on a duplicate deletes it too). **Clear received & skipped** empties the finished ones from the list; received deliveries keep their photo in Stock In.
 - Photos stay on this device until received; each received DR keeps its receipt image in the cloud.
 
 ## GCash / Maya / bank payments with QR and proof
