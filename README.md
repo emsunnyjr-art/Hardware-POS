@@ -88,6 +88,9 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Header uses Store name, Address, TIN (VAT Reg. when ticked) and **Proprietor**; set **Next DR No.** to continue your paper pad series. More than 20 items → continues on page 2.
 - Printing: choose your printer's paper size 135 × 210 mm (or 135 × 105 mm), scale 100%, margins none.
 
+## Sharing the receipt
+- Receipt → **📤 Share** sends the receipt as a picture (PNG) with store name, items, qty × price, discounts, total, payment / change, customer and credit terms — via Messenger, Viber, SMS, email. On a computer it saves the picture. For a PDF use **Print → Save as PDF**.
+
 ## Discount per item
 - In the cart every line has a **🏷 Discount** button: % off, ₱ off each piece, or ₱ off the whole line, with quick 5/10/15/20%. The button then shows the discount (e.g. "🏷 −10%"). Sale discount (whole sale) is still under the totals. Cashiers above the limit need the owner PIN.
 

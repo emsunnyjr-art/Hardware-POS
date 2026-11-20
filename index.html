@@ -284,7 +284,7 @@ const DB={db:null,
  clear(){return this.rq(this.st('readwrite').clear())}};
 
 const CFG=(()=>{try{return JSON.parse(localStorage.getItem('tpos_cfg')||'{}')}catch(e){return{}}})();
-const aiKey=()=>CFG.aiKey||'';const APP_VER='56';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
+const aiKey=()=>CFG.aiKey||'';const APP_VER='57';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
 function saveCfg(){try{localStorage.setItem('tpos_cfg',JSON.stringify(CFG))}catch(e){}}
 if(!CFG.dev){CFG.dev=Math.random().toString(36).slice(2,4).toUpperCase();saveCfg()}
 
@@ -594,10 +594,36 @@ function receiptHTML(s){const st=S.settings,items=s.lines.reduce((a,l)=>a+(+l.qt
  ${s.disc?`<div class="c">You saved ₱${money(s.disc)}</div>`:''}${s.void?'<div class="hr"></div><div class="c rvoid">*** VOIDED ***</div>':''}
  <div class="hr"></div><div class="c">${esc(st.footer)}</div></div>`}
 function printHTML(html,cls){const a=$('#print-area');a.className=cls||'';a.innerHTML=html;setTimeout(()=>window.print(),350)}
-function showReceipt(s,fresh){const m=modal(`<h3>${fresh?'Sale complete ✓':'Receipt'}</h3>${fresh&&s.pay==='Cash'?`<div class="change" style="margin-bottom:12px">Change ₱${money(s.change)}</div>`:''}<div class="rcptwrap">${receiptHTML(s)}</div><div class="row end"><button class="btn" id="rc_sh">Share</button>${s.proofId?`<button class="btn" onclick="viewProof('${s.proofId}')">📎 Proof</button>`:''}<button class="btn" id="rc_dr">DR${s.drNo?' '+esc(s.drNo):''}</button><button class="btn" id="rc_pr">${ic('print',18)} Print</button><button class="btn primary" data-close>${fresh?'New sale':'Close'}</button></div>`);m.querySelector('#rc_dr').onclick=()=>drDialog(S.sales.get(s.id)||s);
+function showReceipt(s,fresh){const m=modal(`<h3>${fresh?'Sale complete ✓':'Receipt'}</h3>${fresh&&s.pay==='Cash'?`<div class="change" style="margin-bottom:12px">Change ₱${money(s.change)}</div>`:''}<div class="rcptwrap">${receiptHTML(s)}</div><div class="row end"><button class="btn" id="rc_sh">📤 Share</button>${s.proofId?`<button class="btn" onclick="viewProof('${s.proofId}')">📎 Proof</button>`:''}<button class="btn" id="rc_dr">DR${s.drNo?' '+esc(s.drNo):''}</button><button class="btn" id="rc_pr">${ic('print',18)} Print</button><button class="btn primary" data-close>${fresh?'New sale':'Close'}</button></div>`);m.querySelector('#rc_dr').onclick=()=>drDialog(S.sales.get(s.id)||s);
  m.querySelector('#rc_pr').onclick=()=>printHTML(receiptHTML(s),S.settings.paper);
- m.querySelector('#rc_sh').onclick=async()=>{const txt=`${S.settings.storeName}\n${s.no} ${fmtDT(s.ts)}\n`+s.lines.map(l=>`${l.name}  ${fmtQty(l.qty)} x ${money(l.price)} = ${money(l.qty*l.price)}`).join('\n')+`\nTOTAL ₱${money(s.total)} (${s.pay})\nCashier: ${s.cashier}\n${BIR_LINE}`;try{if(navigator.share)await navigator.share({title:'Receipt '+s.no,text:txt});else{await navigator.clipboard.writeText(txt);toast('Receipt copied','ok')}}catch(e){}};
+ m.querySelector('#rc_sh').onclick=()=>shareReceiptImage(S.sales.get(s.id)||s);
+ m.querySelector('#rc_sht')&&(m.querySelector('#rc_sht').onclick=async()=>{const txt=`${S.settings.storeName}\n${s.no} ${fmtDT(s.ts)}\n`+s.lines.map(l=>`${l.name}  ${fmtQty(l.qty)} x ${money(l.price)} = ${money(l.qty*l.price)}`).join('\n')+`\nTOTAL ₱${money(s.total)} (${s.pay})\nCashier: ${s.cashier}\n${BIR_LINE}`;try{if(navigator.share)await navigator.share({title:'Receipt '+s.no,text:txt});else{await navigator.clipboard.writeText(txt);toast('Receipt copied','ok')}}catch(e){}});
  m.onclose=()=>{if(S.view==='sell'&&!isTouch())$('#q')?.focus()}}
+
+/* ========= RECEIPT AS IMAGE (share / save) ========= */
+function receiptCanvas(s){const st=S.settings,W=760,P=36,S2=2;const c=document.createElement('canvas'),x=c.getContext('2d');const F='Arial, Helvetica, sans-serif';
+ const ops=[];let y=P;const txt=(t,o={})=>{ops.push({t:String(t??''),y,...o})};const nl=h=>{y+=h};
+ const wrap=(t,font,maxW)=>{x.font=font;const w=String(t).split(/\s+/),out=[];let cur='';w.forEach(v=>{const tr=cur?cur+' '+v:v;if(x.measureText(tr).width>maxW&&cur){out.push(cur);cur=v}else cur=tr});if(cur)out.push(cur);return out};
+ const center=(t,font,h)=>{wrap(t,font,W-2*P).forEach(l=>{txt(l,{font,align:'center'});nl(h)})};
+ const row=(a,b,font,h,bf)=>{const la=wrap(a,font,W-2*P-230);la.forEach((l,i)=>{txt(l,{font});if(i===0&&b!=null)txt(b,{font:bf||font,align:'right'});nl(h)})};
+ const line=(dash)=>{ops.push({line:1,y:y+6,dash});nl(16)};
+ center(st.storeName||'Store','bold 34px '+F,40);const br=brName(s.branch);if(br)center(br,'22px '+F,28);if(st.address)center(st.address,'20px '+F,26);if(st.tin)center((st.vat===false?'':'VAT Reg. ')+'TIN: '+st.tin,'20px '+F,26);nl(8);
+ ops.push({box:1,y,h:44});txt('ACKNOWLEDGEMENT RECEIPT',{font:'bold 24px '+F,align:'center',y:y+9});nl(58);
+ row('Receipt no.',s.no,'22px '+F,30,'bold 22px '+F);row('Date',fmtDT(s.ts),'22px '+F,30);row('Cashier',s.cashier||'','22px '+F,30);if(s.cust)row('Customer',s.cust,'22px '+F,30,'bold 22px '+F);if(s.company)row('Company',s.company,'22px '+F,30);
+ line(1);row('ITEM','AMOUNT','bold 20px '+F,28);line(1);
+ s.lines.forEach(l=>{const nm=(l.name||'')+(l.loose?' (tingi)':'')+(l.order?' (ORDER)':'');wrap(nm,'bold 23px '+F,W-2*P).forEach(t=>{txt(t,{font:'bold 23px '+F});nl(30)});row(`   ${fmtQty(l.qty)} ${l.unit||''} × ₱${money(l.price)}`,'₱'+money(r2(l.qty*l.price)),'22px '+F,30);if(l.disc)row('   Discount','−₱'+money(l.disc),'21px '+F,28);nl(4)});
+ line(1);const sub=r2(s.lines.reduce((a,l)=>a+l.qty*l.price,0)),ld=r2(s.lines.reduce((a,l)=>a+(+l.disc||0),0));row(`Subtotal (${s.lines.length} line${s.lines.length>1?'s':''})`,'₱'+money(sub),'22px '+F,30);if(ld)row('Item discounts','−₱'+money(ld),'22px '+F,30);if(s.odisc)row('Discount on total','−₱'+money(s.odisc),'22px '+F,30);
+ nl(6);row('TOTAL','₱'+money(s.total),'bold 36px '+F,46,'bold 36px '+F);
+ if(s.pay==='Charge'){const cr=s.credit;line(1);txt('CREDIT / UTANG',{font:'bold 22px '+F,align:'center'});nl(32);if(cr){if(cr.down)row('Down payment','₱'+money(cr.down),'22px '+F,30);row(`Interest ${cr.rate}%/mo × ${fmtQty(cr.months)} mo`,'₱'+money(cr.interest),'22px '+F,30);row('TOTAL TO PAY','₱'+money(cr.toCollect),'bold 24px '+F,32,'bold 24px '+F);(cr.n>1?cr.sched:[{due:cr.due,amt:cr.toCollect}]).forEach((z,i)=>row(`${cr.n>1?(i+1)+') ':''}Due ${fmtD(z.due)}`,'₱'+money(z.amt),'22px '+F,30))}else row('On credit','₱'+money(s.total),'22px '+F,30);const pd=crPaid(s);if(pd){row('Paid so far','₱'+money(pd),'22px '+F,30);row('Balance','₱'+money(crBal(s)),'bold 22px '+F,30)}}
+ else{row(`${s.payTo&&s.payTo!==s.pay?s.payTo:payLbl(s.pay)}${s.ref?' #'+s.ref:''}`,'₱'+money(s.pay==='Cash'?s.tend:s.total),'22px '+F,30);if(s.pay==='Cash'&&s.change)row('Change','₱'+money(s.change),'22px '+F,30)}
+ if(s.void){nl(6);center('*** VOIDED ***','bold 30px '+F,40)}
+ line(0);center(st.footer||'Thank you!','20px '+F,26);nl(P-10);
+ const H=Math.ceil(y);c.width=W*S2/2*2;c.height=H*S2/2*2;x.scale(S2/2*2/1,S2/2*2/1);x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#000';x.strokeStyle='#000';x.textBaseline='alphabetic';
+ ops.forEach(o=>{if(o.line){x.save();x.setLineDash(o.dash?[6,5]:[]);x.lineWidth=1.5;x.beginPath();x.moveTo(P,o.y);x.lineTo(W-P,o.y);x.stroke();x.restore();return}if(o.box){x.lineWidth=2.5;x.strokeRect(P,o.y,W-2*P,o.h);return}x.font=o.font||('22px '+F);x.textAlign=o.align||'left';const tx=o.align==='center'?W/2:o.align==='right'?W-P:P;x.fillText(o.t,tx,o.y+22)});
+ return c}
+async function shareReceiptImage(s){try{const c=receiptCanvas(s);const blob=await new Promise(r=>c.toBlob(r,'image/png'));const name=`Receipt-${String(s.no).replace(/[^\w-]+/g,'')}.png`;const file=new File([blob],name,{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Receipt '+s.no,text:`${S.settings.storeName} · Receipt ${s.no} · ₱${money(s.total)}`});return}
+  const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Receipt image saved','ok')}catch(e){if(e&&e.name==='AbortError')return;toast('Could not share the image — '+(e.message||e),'warn')}}
 
 /* ========= PHOTO CLEAN (quick + AI) ========= */
 function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('Image could not be read'));i.src=src})}
