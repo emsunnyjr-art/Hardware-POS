@@ -86,6 +86,8 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Product: Sell unit **cu.m** · Bigger pack **small truck**, **4** cu.m in 1 bigger pack, price per small truck · Sell how: **Whole only**.
 - Receiving a truckload: Buy unit **truck**, **cu.m in 1 truck** = 12 (or what was delivered), cost per truck → stock +12 cu.m, cost per cu.m = truck cost ÷ 12. The 12 is remembered for the next truck.
 - Buying by the truck does **not** change the small-truck selling size; the line shows "Sold as 1 small truck = 4 cu.m · ₱5,500".
+- **Any number of sizes (trucks, sacks, bundles):** product form → **More sizes** → **+ Add size**: name, how many cu.m, price (blank = cu.m price × size). Sizes are remembered in **Settings → Trucks & pack sizes** and offered as quick picks on every item with the same unit (e.g. gravel gets the same trucks with one tap).
+- **Changed truck / one-off size:** on the sell screen tap **other size…** → pick a saved size or type a new one (name + cu.m); price = cu.m price × size (editable); tick "Remember" to keep it for next time.
 - Sell screen: **per cu.m** or **1 small truck**. Half a cubic: change the qty in the cart to 0.5.
 - The pile shrinks/spills: when the pile is used up, count what is left and adjust in Inventory so the loss shows.
 
