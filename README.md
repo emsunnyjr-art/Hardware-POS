@@ -65,6 +65,14 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
 - Every product must have a cost. Products → "Missing cost" filter finds gaps.
 
+## Bulk receipts (hundreds of DR / invoice photos)
+- Stock In → **📚 Bulk receipts** (owner) → **Add receipt photos** → select all at once (on a phone pick **Google Drive** in the picker to take them straight from a Drive folder).
+- Each photo is read by AI one by one (10–20 s each; ~3–5 per minute). Keep the screen open; it continues after a reload. If the AI limit is reached it pauses and resumes by itself after 10 minutes.
+- List: **ready** / **check** (duplicate DR, lines ≠ total, missing cost or date, nothing read) / **received ✓** / errors (Retry) / skipped.
+- **Auto-receive all clean** receives the ready ones **oldest date first** (so the newest cost wins; older DRs follow the history-only rule). Receipts with warnings are left for you: **Open** shows the normal Receive form filled in.
+- New items are created **without a selling price** — set them later in Stock In → **Price review** (or Products → No price). Existing items keep / update price by the normal rules.
+- Photos stay on this device until received; each received DR keeps its receipt image in the cloud.
+
 ## GCash / Maya / bank payments with QR and proof
 - **Settings → Payment QR:** add your GCash / Maya / bank QR (upload a screenshot of your "Receive money" QR), account name and number. Add as many as you have.
 - **At payment:** tap **GCash / Maya** or **Bank transfer** → the QR, account name/number and amount show (tap the QR to show it big for the customer). Several accounts → pick one.
