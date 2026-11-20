@@ -82,6 +82,13 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Past closings listed on the Close screen; owner sees them under Reports → Shift closings.
 - Reports → Day report: one-page sales report for the selected period and branch (no cash count).
 
+## Sand, gravel and other bulk loads (truckload in, sold per cu.m or small truck)
+- Product: Sell unit **cu.m** · Bigger pack **small truck**, **4** cu.m in 1 bigger pack, price per small truck · Sell how: **Whole only**.
+- Receiving a truckload: Buy unit **truck**, **cu.m in 1 truck** = 12 (or what was delivered), cost per truck → stock +12 cu.m, cost per cu.m = truck cost ÷ 12. The 12 is remembered for the next truck.
+- Buying by the truck does **not** change the small-truck selling size; the line shows "Sold as 1 small truck = 4 cu.m · ₱5,500".
+- Sell screen: **per cu.m** or **1 small truck**. Half a cubic: change the qty in the cart to 0.5.
+- The pile shrinks/spills: when the pile is used up, count what is left and adjust in Inventory so the loss shows.
+
 ## Up to 3 selling levels (case → box → pc / kg)
 - Example: 1 case = 3 boxes, 1 box = 100 pc. Product: Sell unit **box** · Bigger pack **case**, **3** box in 1 bigger pack, price per case · **Whole + tingi** per **pc**, 100 in 1 box, price per pc.
 - Product form shows the levels live: "📦 Sold in 3 levels: 1 case = 3 box · ₱2,700 → 1 box · ₱950 → per pc (100 in 1 box) · ₱12 · 1 case = 300 pc".
