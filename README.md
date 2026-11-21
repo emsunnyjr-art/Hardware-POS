@@ -65,6 +65,12 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
 - Every product must have a cost. Products → "Missing cost" filter finds gaps.
 
+## Add a staff member's phone (invite link)
+1. Owner: Settings → Users & PINs → **Add cashier** → name, role, 4-digit PIN → Save.
+2. **📲 Invite a phone** → choose their branch → **Send link** (Messenger / Viber, privately) or let them scan the QR.
+3. Staff: open the link in Safari / Chrome → the phone connects and downloads the store → tap their name → PIN. Add to Home Screen for an app icon.
+- The link contains the store sync key — send only to the person. They still need their own PIN; disable a user in Users & PINs to block them.
+
 ## Stock count (match the app to the shelf)
 - Inventory → **Stock count**. Type the real count per item (blank = not counted). Tingi items have a second box for the **open** roll/box (e.g. 52 m).
 - Counts are **kept on this phone** until you save: count over several days, search, filter **Not counted yet / Counted**, close the app — nothing is lost. Progress shows counted items, how many differ and the ₱ value of the difference.

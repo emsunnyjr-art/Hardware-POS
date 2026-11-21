@@ -284,7 +284,7 @@ const DB={db:null,
  clear(){return this.rq(this.st('readwrite').clear())}};
 
 const CFG=(()=>{try{return JSON.parse(localStorage.getItem('tpos_cfg')||'{}')}catch(e){return{}}})();
-const aiKey=()=>CFG.aiKey||'';const APP_VER='58';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
+const aiKey=()=>CFG.aiKey||'';const APP_VER='59';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
 function saveCfg(){try{localStorage.setItem('tpos_cfg',JSON.stringify(CFG))}catch(e){}}
 if(!CFG.dev){CFG.dev=Math.random().toString(36).slice(2,4).toUpperCase();saveCfg()}
 
@@ -599,6 +599,28 @@ function showReceipt(s,fresh){const m=modal(`<h3>${fresh?'Sale complete ✓':'Re
  m.querySelector('#rc_sh').onclick=()=>shareReceiptImage(S.sales.get(s.id)||s);
  m.querySelector('#rc_sht')&&(m.querySelector('#rc_sht').onclick=async()=>{const txt=`${S.settings.storeName}\n${s.no} ${fmtDT(s.ts)}\n`+s.lines.map(l=>`${l.name}  ${fmtQty(l.qty)} x ${money(l.price)} = ${money(l.qty*l.price)}`).join('\n')+`\nTOTAL ₱${money(s.total)} (${s.pay})\nCashier: ${s.cashier}\n${BIR_LINE}`;try{if(navigator.share)await navigator.share({title:'Receipt '+s.no,text:txt});else{await navigator.clipboard.writeText(txt);toast('Receipt copied','ok')}}catch(e){}});
  m.onclose=()=>{if(S.view==='sell'&&!isTouch())$('#q')?.focus()}}
+
+/* ========= INVITE A PHONE (link / QR that connects a new phone to this store) ========= */
+const b64u=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const ub64u=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))));
+function inviteLink(br){const base=location.href.split('#')[0].split('?')[0];return base+'#join='+b64u(JSON.stringify({u:CFG.sbUrl,k:CFG.sbKey,b:br||'',n:S.settings.storeName||''}))}
+async function invitePhone(){if(!isOwner())return toast('Owner only','warn');if(!(CFG.sbUrl&&CFG.sbKey))return toast('Set up Cloud sync on this phone first','warn');const users=[...S.users.values()].filter(u=>u.active!==false);
+ const m=modal(`<h3>📲 Invite a phone</h3><p class="small mute">Send this link to your staff. When they open it, their phone connects to <b>${esc(S.settings.storeName||'this store')}</b> and downloads products and stock. They still need <b>their own name + PIN</b> to log in.</p>
+ <label>Their branch<select id="iv_b">${[...S.branches.values()].map(b=>`<option value="${b.id}" ${b.id===S.branch?'selected':''}>${esc(b.name)}</option>`).join('')}</select></label>
+ <p class="small" style="margin:6px 0">Users on this store: ${users.map(u=>`<b>${esc(u.name)}</b> <span class="mute">(${u.role})</span>`).join(', ')} · <button class="link small" id="iv_nu">＋ Add user</button></p>
+ <div class="c"><div id="iv_qr" style="display:inline-block;background:#fff;padding:10px;border-radius:10px"></div><p class="small mute">Or scan this with their phone camera.</p></div>
+ <div class="row end" style="flex-wrap:wrap;gap:6px"><button class="btn" data-close>Close</button><button class="btn" id="iv_cp">Copy link</button><button class="btn primary" id="iv_sh">📤 Send link</button></div>
+ <p class="small" style="color:var(--warn);margin-top:8px">⚠ The link contains your store's sync key. Send it only privately (Messenger / Viber to the person). If it leaks, change the key in Supabase and re-invite.</p>`);const g=x=>m.querySelector(x);
+ const link=()=>inviteLink(g('#iv_b').value);
+ const qr=async()=>{try{await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');g('#iv_qr').innerHTML='';new QRCode(g('#iv_qr'),{text:link(),width:220,height:220,correctLevel:QRCode.CorrectLevel.L})}catch(e){g('#iv_qr').innerHTML='<span class="small mute">QR needs internet</span>'}};qr();g('#iv_b').onchange=qr;
+ g('#iv_cp').onclick=async()=>{try{await navigator.clipboard.writeText(link());toast('Link copied — paste it in Messenger / Viber','ok')}catch(e){prompt('Copy this link',link())}};
+ g('#iv_sh').onclick=async()=>{const t=`Tindero POS — ${S.settings.storeName||''} (${brName(g('#iv_b').value)}). Open this link on your phone, then log in with your name and PIN:`;try{if(navigator.share)await navigator.share({title:'Tindero POS invite',text:t,url:link()});else{await navigator.clipboard.writeText(t+' '+link());toast('Invite copied','ok')}}catch(e){}};
+ g('#iv_nu').onclick=()=>{closeModal(m);editUser()}}
+async function joinFromLink(){const h=location.hash||'';if(!h.startsWith('#join='))return false;let j;try{j=JSON.parse(ub64u(h.slice(6)))}catch(e){history.replaceState(null,'',location.pathname);toast('Invite link is damaged — ask for a new one','bad');return false}
+ history.replaceState(null,'',location.pathname+location.search);if(!/^https:\/\//.test(j.u||'')||!j.k)return false;
+ if(CFG.sbUrl===j.u&&CFG.sbKey===j.k){if(j.b&&S.branches.has(j.b)){CFG.branch=j.b;saveCfg()}toast('This phone is already connected','ok');return false}
+ if(CFG.sbUrl&&CFG.sbUrl!==j.u&&!await confirmBox(`This phone is connected to another store. Switch to ${j.n||'the invited store'}? Unsynced data of the old store stays on this phone only.`,'Switch',true))return false;
+ CFG.sbUrl=j.u;CFG.sbKey=j.k;CFG.lastPull=null;if(j.b)CFG.branch=j.b;saveCfg();toast('Connecting to '+(j.n||'the store')+'…','ok');const ok=await sync(true);if(j.b&&S.branches.has(j.b))S.branch=j.b;S.user=null;showLogin();if(ok)toast('Connected ✓ — choose your name and enter your PIN','ok');return true}
 
 /* ========= RECEIPT AS IMAGE (share / save) ========= */
 function receiptCanvas(s){const st=S.settings,W=760,P=36,S2=2;const c=document.createElement('canvas'),x=c.getContext('2d');const F='Arial, Helvetica, sans-serif';
@@ -1615,7 +1637,7 @@ VIEWS.settings=function(){const st=S.settings;const users=[...S.users.values()];
  <p class="small mute">This device is set to <b>${esc(curBranch().name)}</b> (change with the branch selector). Cashiers can only sell from the device's branch.</p></div>
  <div class="card"><h4>Payment QR (GCash / Maya / Bank)</h4><p class="small mute">Shown to the customer at payment. After paying, upload their confirmation — the reference no. is read automatically.</p>${payAccs().length?`<table>${payAccs().map((a,i)=>`<tr style="cursor:pointer" onclick="payAccEdit(${i})"><td><b>${esc(a.name)}</b><br><small class="mute">${esc(PAY_TYPES[a.type]||a.type)}</small></td><td>${esc(a.acctName||'')}<br><small>${esc(a.acctNo||'')}</small></td><td class="n">${a.qrId?'<span class="pill ok">QR</span>':'<span class="pill warn">no QR</span>'}</td></tr>`).join('')}</table>`:'<p class="small mute">None yet.</p>'}<div class="row end"><button class="btn" onclick="payAccEdit(-1)">${ic('plus',16)} Add GCash / bank QR</button></div></div>
  <div class="card"><h4>Trucks & pack sizes</h4><p class="small mute">Sizes you sell in (trucks, sacks, bundles…). Remembered here when you add them to a product or at a sale; offered as quick picks on every item with the same unit.</p>${(S.settings.sizes||[]).length?`<table>${(S.settings.sizes||[]).map((z,i)=>`<tr><td><input value="${esc(z.unit)}" onchange="sizeEdit(${i},'unit',this.value)"></td><td style="width:90px"><input inputmode="decimal" value="${+z.qty}" onchange="sizeEdit(${i},'qty',this.value)"></td><td style="width:80px"><input value="${esc(z.of||'')}" placeholder="unit" onchange="sizeEdit(${i},'of',this.value)"></td><td class="n" style="width:44px"><button class="btn icon sm" onclick="sizeEdit(${i},'del')" title="Remove">${ic('x',14)}</button></td></tr>`).join('')}</table>`:'<p class="small mute">None yet.</p>'}<div class="row end"><button class="btn" onclick="sizeEdit(-1,'add')">${ic('plus',16)} Add size</button></div></div>
- <div class="card"><h4>Users & PINs</h4>${users.map(u=>`<div class="li" style="padding:8px 0" onclick="editUser('${u.id}')"><span class="av">${esc(initials(u.name))}</span><div class="grow"><b>${esc(u.name)}</b><small class="mute">${u.role}${u.active===false?' · disabled':''}</small></div><button class="btn sm">Edit</button></div>`).join('')}<div class="row end"><button class="btn" onclick="editUser()">${ic('plus',16)} Add cashier</button></div></div>
+ <div class="card"><h4>Users & PINs</h4><div class="row" style="margin:-4px 0 6px"><button class="btn sm primary" onclick="invitePhone()">📲 Invite a phone</button></div>${users.map(u=>`<div class="li" style="padding:8px 0" onclick="editUser('${u.id}')"><span class="av">${esc(initials(u.name))}</span><div class="grow"><b>${esc(u.name)}</b><small class="mute">${u.role}${u.active===false?' · disabled':''}</small></div><button class="btn sm">Edit</button></div>`).join('')}<div class="row end"><button class="btn" onclick="editUser()">${ic('plus',16)} Add cashier</button></div></div>
  <div class="card"><h4>${ic('sync',16)} Cloud sync (all devices &amp; branches)</h4><p class="small mute">Works fully offline on each device. To share data across phones, tablets and branches, connect a free Supabase project: run <b>setup.sql</b> in its SQL Editor, then paste the Project URL and publishable/anon key.</p><label>Project URL<input id="sy_u" value="${esc(CFG.sbUrl||'')}" placeholder="https://xxxx.supabase.co"></label><label>Publishable / anon key<input id="sy_k" value="${esc(CFG.sbKey||'')}" placeholder="sb_publishable_… or eyJ…"></label>
  <div class="row end"><span class="small mute grow" id="sy_s">${CFG.lastSyncAt?'Last sync '+fmtDT(CFG.lastSyncAt):'Not connected'}</span><button class="btn" onclick="saveSync(false)">Disconnect</button><button class="btn primary" onclick="saveSync(true)">Save &amp; sync now</button></div></div>
  <div class="card"><h4>${ic('spark',16)} Receipt reader (AI)</h4><p class="small mute">${CFG.sbUrl?'<b style="color:var(--ok)">✓ Runs on your cloud server</b> — receipts, supplier price lists and tingi prices are read there. No key is needed on this device, and no AI key is ever stored in the synced data.':'Connect Cloud sync above to use the server reader (no key needed on devices).'}</p>
@@ -1667,7 +1689,8 @@ setInterval(()=>{if(CFG.sbUrl&&S.user)sync(false)},60000);window.addEventListene
 (async function boot(){try{await DB.open()}catch(e){document.body.innerHTML='<p style="padding:20px">This browser blocks local storage (private mode?). Open in Safari/Chrome normally.</p>';return}
  const recs=await DB.boot();recs.forEach(applyRec);if(!S.branches.size){await seed()}recomputeStock();
  S.branch=S.branches.has(CFG.branch)?CFG.branch:mainBranch().id;showLogin();
- if(CFG.sbUrl)sync(false).then(()=>{if(!S.user)showLogin()});
+ if((location.hash||'').startsWith('#join='))joinFromLink();else if(CFG.sbUrl)sync(false).then(()=>{if(!S.user)showLogin()});
+ window.addEventListener('hashchange',()=>{if((location.hash||'').startsWith('#join='))joinFromLink()});
  if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})})();
 /* tap a box showing 0 -> empty it for typing; leave it empty -> 0 comes back */
