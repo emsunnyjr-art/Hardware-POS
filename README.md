@@ -65,6 +65,12 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - Last cost + supplier kept per item. Cost ▲/▼ shown on receiving vs last delivery.
 - Every product must have a cost. Products → "Missing cost" filter finds gaps.
 
+## Stock count (match the app to the shelf)
+- Inventory → **Stock count**. Type the real count per item (blank = not counted). Tingi items have a second box for the **open** roll/box (e.g. 52 m).
+- Counts are **kept on this phone** until you save: count over several days, search, filter **Not counted yet / Counted**, close the app — nothing is lost. Progress shows counted items, how many differ and the ₱ value of the difference.
+- The difference is measured against the stock at the moment you typed the count, so sales made later in the day are still deducted correctly.
+- **Save counts** sets stock to your counts (recorded as "count" movements under your name, see Movements). **Clear counts** throws away the unsaved counts.
+
 ## Bulk receipts (hundreds of DR / invoice photos)
 - Stock In → **📚 Bulk receipts** (owner) → **Add receipt photos** → select all at once (on a phone pick **Google Drive** in the picker to take them straight from a Drive folder).
 - Each photo is read by AI one by one (10–20 s each; ~3–5 per minute). Keep the screen open; it continues after a reload. If the AI limit is reached it pauses and resumes by itself after 10 minutes.
