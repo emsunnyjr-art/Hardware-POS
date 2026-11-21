@@ -83,6 +83,7 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 - List: **ready** / **check** (duplicate DR, lines ≠ total, missing cost or date, nothing read) / **received ✓** / errors (Retry) / skipped.
 - **Auto-receive all clean** receives the ready ones **oldest date first** (so the newest cost wins; older DRs follow the history-only rule). Receipts with warnings are left for you: **Open** shows the normal Receive form filled in.
 - New items are created **without a selling price** — set them later in Stock In → **Price review** (or Products → No price). Existing items keep / update price by the normal rules.
+- iPhone **HEIC** photos (e.g. from Google Drive on a Windows PC) are converted automatically, so all photos show in the picker and load.
 - **Delete duplicates (N)** removes duplicate photos in one tap (✕ on a duplicate deletes it too). **Clear received & skipped** empties the finished ones from the list; received deliveries keep their photo in Stock In.
 - Photos stay on this device until received; each received DR keeps its receipt image in the cloud.
 
@@ -105,6 +106,12 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 
 ## Discount per item
 - In the cart every line has a **🏷 Discount** button: % off, ₱ off each piece, or ₱ off the whole line, with quick 5/10/15/20%. The button then shows the discount (e.g. "🏷 −10%"). Sale discount (whole sale) is still under the totals. Cashiers above the limit need the owner PIN.
+
+## Finding past receipts
+- **Reports** → pick the period (Today … This year, **All time**, or **Pick dates** with From / To) → **Transactions** → **Find receipt** box: receipt no., customer, company, item name, GCash/bank ref no., DR no. or exact amount → **View** opens the receipt (Print, 📤 Share picture, DR, 📎 Proof, Void).
+- Customer history: **Customers** → tap the customer → purchases and unpaid credit.
+- All records to Excel: Reports → **Export sales CSV** (one row per item line).
+- Shift reports: **Close** → Past closings → View.
 
 ## Customers & credit (utang)
 - **Every sale can keep the customer:** type a name at payment. New names become a customer profile (company, type, mobile). Known names show their profile and what they owe.
@@ -281,6 +288,7 @@ All are permissive licenses that allow selling the app. Keep these notices.
 | html5-qrcode | camera barcode / QR scanning | 2.3.8 | Apache-2.0 |
 | JsBarcode | barcode labels | 3.11.6 | MIT |
 | qrcodejs (davidshimjs) | QR labels | 1.0.0 | MIT |
+| heic2any 0.0.4 (loaded only when a HEIC photo is chosen) | MIT (bundles libheif, LGPL-3.0, as a separate script) |
 | SheetJS Community Edition (xlsx) | reading supplier Excel price lists | 0.18.5 | Apache-2.0 |
 | pdf.js (Mozilla) | reading supplier PDF price lists | 3.11.174 | Apache-2.0 |
 | Supabase JS client (server function only) | AI job queue on the store's server | 2.x | MIT |
