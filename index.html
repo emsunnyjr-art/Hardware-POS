@@ -284,7 +284,7 @@ const DB={db:null,
  clear(){return this.rq(this.st('readwrite').clear())}};
 
 const CFG=(()=>{try{return JSON.parse(localStorage.getItem('tpos_cfg')||'{}')}catch(e){return{}}})();
-const aiKey=()=>CFG.aiKey||'';const APP_VER='61';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
+const aiKey=()=>CFG.aiKey||'';const APP_VER='62';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
 function saveCfg(){try{localStorage.setItem('tpos_cfg',JSON.stringify(CFG))}catch(e){}}
 if(!CFG.dev){CFG.dev=Math.random().toString(36).slice(2,4).toUpperCase();saveCfg()}
 
@@ -1257,7 +1257,7 @@ function salesSummary(br,from,to){const ss=[...S.sales.values()].filter(s=>(br==
  return{byType,byCat,credit,collect,cashIn:r2(pay.Cash+(collect.Cash||0)),orders,count:ok.length,voids:vd.length,voidAmt:r2(vd.reduce((a,s)=>a+s.total,0)),gross:r2(gross),disc:r2(disc),net:r2(net),profit:r2(net-cost),pay,cash,items:Object.values(items).sort((a,b)=>b.amt-a.amt)}}
 VIEWS.close=function(){const br=S.branch,lc=lastClose(br),d0=new Date();d0.setHours(0,0,0,0);const from=lc||d0.getTime(),sm=salesSummary(br,from,Date.now());
  const hist=[...S.closes.values()].filter(c=>isOwner()||c.branch===br).sort((a,b)=>b.to-a.to).slice(0,40);
- $('#view').innerHTML=`<div class="page" style="max-width:960px"><div class="ph-h"><h2>Close shift · ${esc(brName(br))}</h2></div>
+ $('#view').innerHTML=`<div class="page" style="max-width:960px"><div class="ph-h"><h2>Close shift · ${esc(brName(br))}</h2><div class="acts"><button class="btn" onclick="receiptFinder()">🧾 Find receipt</button></div></div>
  <p class="small mute" style="margin-top:-8px">Sales from <b>${fmtDT(from)}</b> ${lc?'(last close)':'(start of today)'} until now · cashier: ${esc(S.user.name)}</p>
  <div class="kpis"><div class="kpi"><small>Net sales</small><b>${peso(sm.net)}</b><small>${sm.count} sales${sm.voids?` · ${sm.voids} voided`:''}</small></div><div class="kpi"><small>Cash</small><b>${peso(sm.pay.Cash)}</b></div><div class="kpi"><small>GCash · Card</small><b>${peso((sm.pay.GCash||0)+(sm.pay.Card||0))}</b></div><div class="kpi"><small>Credit (utang)</small><b>${peso(sm.pay.Charge||0)}</b>${sm.collect?.total?`<small>collected ${peso(sm.collect.total)}</small>`:''}</div></div>
  <div class="g2 stack" style="align-items:start"><div class="card"><h4>1. Count the cash drawer</h4><label>Starting cash (float / panukli)<input id="cl_f" inputmode="decimal" value="${CFG['float_'+br]??''}" placeholder="0"></label>
@@ -1688,6 +1688,15 @@ async function sync(manual){if(!CFG.sbUrl||!CFG.sbKey){if(manual)toast('Cloud sy
 setInterval(()=>{if(CFG.sbUrl&&S.user)sync(false)},60000);window.addEventListener('online',()=>sync(false));
 
 /* ========= boot ========= */
+function receiptFinder(){const own=isOwner();let q='',days=30;const m=modal(`<div class="row pu_top"><h3 style="margin:0">🧾 Find receipt</h3><span class="grow"></span><button class="btn sm" data-close>✕ Close</button></div>
+ <div class="search" style="margin-bottom:6px">${ic('search')}<input id="rf_q" placeholder="Receipt no., customer, item, ref no., amount" autocomplete="off"></div>
+ <div class="chips" id="rf_d" style="margin:0 0 6px">${[[1,'Today'],[2,'Since yesterday'],[7,'7 days'],[30,'30 days'],[365,'1 year'],[0,'All']].map(([d,l])=>`<button class="chip ${d===days?'on':''}" data-d="${d}">${l}</button>`).join('')}</div>
+ <div id="rf_n" class="small mute"></div><div id="rf_l"></div>`,'full');const g=x=>m.querySelector(x);
+ const draw=()=>{const d0=new Date();d0.setHours(0,0,0,0);const from=days?d0.getTime()-(days-1)*864e5:0;const L=[...S.sales.values()].filter(s=>s.ts>=from&&(own||s.branch===S.branch)).sort((a,b)=>b.ts-a.ts);const keep=S.txq;S.txq=q;const R=q?txFilter(L):L;S.txq=keep;
+  g('#rf_n').textContent=`${R.length} receipt${R.length===1?'':'s'}${R.length>150?' · showing newest 150 — type to narrow':''}`;
+  g('#rf_l').innerHTML=`<table>${R.slice(0,150).map(s=>`<tr style="cursor:pointer;${s.void?'opacity:.5;text-decoration:line-through':''}" data-id="${s.id}"><td><b>${esc(s.no)}</b><br><small class="mute">${fmtDT(s.ts)} · ${esc(s.cashier||'')}</small></td><td><small>${esc(s.cust||'Walk-in')}${s.company?'<br>'+esc(s.company):''}<br>${esc(payLbl(s.pay))}${s.ref?' #'+esc(s.ref):''}</small></td><td class="n"><b>${peso(s.total)}</b><br><small class="mute">${s.lines.length} item${s.lines.length>1?'s':''}</small></td></tr>`).join('')}</table>`};
+ g('#rf_q').oninput=()=>{q=g('#rf_q').value.trim();draw()};g('#rf_d').onclick=e=>{const b=e.target.closest('[data-d]');if(!b)return;days=+b.dataset.d;g('#rf_d').querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));draw()};
+ g('#rf_l').onclick=e=>{const tr=e.target.closest('[data-id]');if(tr)showReceipt(S.sales.get(tr.dataset.id))};draw();setTimeout(()=>g('#rf_q').focus(),100)}
 function txWire(){const qi=$('#tx_q');if(!qi)return;const rk=S.rr||'today',br=S.rbr||'all';const[from,to]=range(rk);const sales=[...S.sales.values()].filter(s=>s.ts>=from&&s.ts<to&&(br==='all'||s.branch===br));const tf=txFilter(sales),lim=S.txAll?5000:300;const nn=$('#tx_n');if(nn)nn.innerHTML=`${tf.length} receipt${tf.length===1?'':'s'}${S.txq?' match "'+esc(S.txq)+'"':''}${tf.length>lim?` · showing ${lim} newest <button class="link small" onclick="S.txAll=1;go('reports')">show all</button>`:''}${S.txq?` · <button class="link small" onclick="S.txq='';go('reports')">clear</button>`:''}`;qi.onchange=()=>{if(S.txq===qi.value)return;S.txq=qi.value;setTimeout(()=>go('reports'))};qi.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();qi.blur()}}}
 {const _rv=VIEWS.reports;VIEWS.reports=function(){_rv.apply(this,arguments);txWire()}}
 (async function boot(){try{await DB.open()}catch(e){document.body.innerHTML='<p style="padding:20px">This browser blocks local storage (private mode?). Open in Safari/Chrome normally.</p>';return}

@@ -109,6 +109,7 @@ Runs on the store's own Supabase server — **no AI key on any device, nothing s
 
 ## Finding past receipts
 - **Reports** → pick the period (Today … This year, **All time**, or **Pick dates** with From / To) → **Transactions** → **Find receipt** box: receipt no., customer, company, item name, GCash/bank ref no., DR no. or exact amount → **View** opens the receipt (Print, 📤 Share picture, DR, 📎 Proof, Void).
+- **Cashiers:** Close → **🧾 Find receipt** — search their branch's receipts (no., customer, item, ref, amount; today … all) and open, print or share them. No need to send files.
 - Customer history: **Customers** → tap the customer → purchases and unpaid credit.
 - All records to Excel: Reports → **Export sales CSV** (one row per item line).
 - Shift reports: **Close** → Past closings → View.
