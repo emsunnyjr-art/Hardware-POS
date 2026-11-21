@@ -284,7 +284,7 @@ const DB={db:null,
  clear(){return this.rq(this.st('readwrite').clear())}};
 
 const CFG=(()=>{try{return JSON.parse(localStorage.getItem('tpos_cfg')||'{}')}catch(e){return{}}})();
-const aiKey=()=>CFG.aiKey||'';const APP_VER='62';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
+const aiKey=()=>CFG.aiKey||'';const APP_VER='64';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
 function saveCfg(){try{localStorage.setItem('tpos_cfg',JSON.stringify(CFG))}catch(e){}}
 if(!CFG.dev){CFG.dev=Math.random().toString(36).slice(2,4).toUpperCase();saveCfg()}
 
@@ -594,12 +594,23 @@ function receiptHTML(s){const st=S.settings,items=s.lines.reduce((a,l)=>a+(+l.qt
  ${s.disc?`<div class="c">You saved ₱${money(s.disc)}</div>`:''}${s.void?'<div class="hr"></div><div class="c rvoid">*** VOIDED ***</div>':''}
  <div class="hr"></div><div class="c">${esc(st.footer)}</div></div>`}
 function printHTML(html,cls){const a=$('#print-area');a.className=cls||'';a.innerHTML=html;setTimeout(()=>window.print(),350)}
-function showReceipt(s,fresh){const m=modal(`<h3>${fresh?'Sale complete ✓':'Receipt'}</h3>${fresh&&s.pay==='Cash'?`<div class="change" style="margin-bottom:12px">Change ₱${money(s.change)}</div>`:''}<div class="rcptwrap">${receiptHTML(s)}</div><div class="row end"><button class="btn" id="rc_sh">📤 Share</button>${s.proofId?`<button class="btn" onclick="viewProof('${s.proofId}')">📎 Proof</button>`:''}<button class="btn" id="rc_dr">DR${s.drNo?' '+esc(s.drNo):''}</button><button class="btn" id="rc_pr">${ic('print',18)} Print</button><button class="btn primary" data-close>${fresh?'New sale':'Close'}</button></div>`);m.querySelector('#rc_dr').onclick=()=>drDialog(S.sales.get(s.id)||s);
+function showReceipt(s,fresh){const m=modal(`<h3>${fresh?'Sale complete ✓':'Receipt'}</h3>${fresh&&s.pay==='Cash'?`<div class="change" style="margin-bottom:12px">Change ₱${money(s.change)}</div>`:''}<div class="rcptwrap">${receiptHTML(s)}</div><div class="row end"><button class="btn" id="rc_sh">📤 Share PDF</button><button class="btn" id="rc_shi" title="Share as picture">🖼</button><button class="btn" id="rc_sht" title="Send as text message (Viber, SMS, Messenger)">💬 Viber</button>${s.proofId?`<button class="btn" onclick="viewProof('${s.proofId}')">📎 Proof</button>`:''}<button class="btn" id="rc_dr">DR${s.drNo?' '+esc(s.drNo):''}</button><button class="btn" id="rc_pr">${ic('print',18)} Print</button><button class="btn primary" data-close>${fresh?'New sale':'Close'}</button></div>`);m.querySelector('#rc_dr').onclick=()=>drDialog(S.sales.get(s.id)||s);
  m.querySelector('#rc_pr').onclick=()=>printHTML(receiptHTML(s),S.settings.paper);
- m.querySelector('#rc_sh').onclick=()=>shareReceiptImage(S.sales.get(s.id)||s);
- m.querySelector('#rc_sht')&&(m.querySelector('#rc_sht').onclick=async()=>{const txt=`${S.settings.storeName}\n${s.no} ${fmtDT(s.ts)}\n`+s.lines.map(l=>`${l.name}  ${fmtQty(l.qty)} x ${money(l.price)} = ${money(l.qty*l.price)}`).join('\n')+`\nTOTAL ₱${money(s.total)} (${s.pay})\nCashier: ${s.cashier}\n${BIR_LINE}`;try{if(navigator.share)await navigator.share({title:'Receipt '+s.no,text:txt});else{await navigator.clipboard.writeText(txt);toast('Receipt copied','ok')}}catch(e){}});
+ m.querySelector('#rc_sh').onclick=()=>shareReceiptImage(S.sales.get(s.id)||s,'pdf');m.querySelector('#rc_shi').onclick=()=>shareReceiptImage(S.sales.get(s.id)||s,'img');
+ m.querySelector('#rc_sht').onclick=()=>sendReceiptText(S.sales.get(s.id)||s);
  m.onclose=()=>{if(S.view==='sell'&&!isTouch())$('#q')?.focus()}}
 
+/* Receipt as plain text — sends like a chat message (works in Viber on phone & computer) */
+function receiptText(s){const st=S.settings,L=[];L.push(st.storeName+(brName(s.branch)?' · '+brName(s.branch):''));L.push(BIR_LINE);L.push(`Receipt ${s.no} · ${fmtDT(s.ts)}`);if(s.cust)L.push('Customer: '+s.cust+(s.company?' ('+s.company+')':''));L.push('');
+ s.lines.forEach(l=>{L.push(`${l.name}${l.order?' (ORDER)':''}`);L.push(`  ${fmtQty(l.qty)} ${l.unit||''} x ${money(l.price)} = ${money(l.qty*l.price)}`);if(l.disc)L.push(`  less -${money(l.disc)}`)});
+ L.push('');L.push('Subtotal: '+money(s.sub));if(s.disc)L.push('Discount: -'+money(s.disc));L.push(`TOTAL: ₱${money(s.total)}`);
+ if(s.pay==='Charge'){L.push('CREDIT (utang)'+(s.down?' · down ₱'+money(s.down):''))}else{L.push(`Paid: ${s.payTo&&s.payTo!==s.pay?s.payTo:payLbl(s.pay)}${s.ref?' #'+s.ref:''}`);if(s.pay==='Cash'&&s.change)L.push('Change: '+money(s.change))}
+ if(s.void)L.push('*** VOIDED ***');L.push('Cashier: '+s.cashier);return L.join('\n')}
+async function sendReceiptText(s){const t=receiptText(s);
+ if(isTouch()&&navigator.share){try{await navigator.share({title:'Receipt '+s.no,text:t});return}catch(e){if(e&&e.name==='AbortError')return}}
+ try{await navigator.clipboard.writeText(t)}catch(e){}
+ location.href='viber://forward?text='+encodeURIComponent(t);
+ toast('Receipt text copied. Viber opens → pick the chat. If Viber does not open, paste (Ctrl/⌘V) in any chat.','ok')}
 /* ========= INVITE A PHONE (link / QR that connects a new phone to this store) ========= */
 const b64u=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const ub64u=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))));
@@ -643,9 +654,22 @@ function receiptCanvas(s){const st=S.settings,W=760,P=36,S2=2;const c=document.c
  const H=Math.ceil(y);c.width=W*S2/2*2;c.height=H*S2/2*2;x.scale(S2/2*2/1,S2/2*2/1);x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#000';x.strokeStyle='#000';x.textBaseline='alphabetic';
  ops.forEach(o=>{if(o.line){x.save();x.setLineDash(o.dash?[6,5]:[]);x.lineWidth=1.5;x.beginPath();x.moveTo(P,o.y);x.lineTo(W-P,o.y);x.stroke();x.restore();return}if(o.box){x.lineWidth=2.5;x.strokeRect(P,o.y,W-2*P,o.h);return}x.font=o.font||('22px '+F);x.textAlign=o.align||'left';const tx=o.align==='center'?W/2:o.align==='right'?W-P:P;x.fillText(o.t,tx,o.y+22)});
  return c}
-async function shareReceiptImage(s){try{const c=receiptCanvas(s);const blob=await new Promise(r=>c.toBlob(r,'image/png'));const name=`Receipt-${String(s.no).replace(/[^\w-]+/g,'')}.png`;const file=new File([blob],name,{type:'image/png'});
-  if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Receipt '+s.no,text:`${S.settings.storeName} · Receipt ${s.no} · ₱${money(s.total)}`});return}
-  const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Receipt image saved','ok')}catch(e){if(e&&e.name==='AbortError')return;toast('Could not share the image — '+(e.message||e),'warn')}}
+// tiny PDF writer: one page with one JPEG image (no library)
+async function jpegToPdf(jpegBlob,w,h,widthMm){const jb=new Uint8Array(await jpegBlob.arrayBuffer());const pw=(widthMm||80)*72/25.4,ph=pw*h/w;const enc=new TextEncoder();const parts=[],offs=[];let len=0;const add=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length};
+ add('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');const obj=(n,body)=>{offs[n]=len;add(n+' 0 obj\n');body();add('\nendobj\n')};
+ obj(1,()=>add('<< /Type /Catalog /Pages 2 0 R >>'));obj(2,()=>add('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'));
+ obj(3,()=>add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw.toFixed(2)} ${ph.toFixed(2)}] /Resources << /XObject << /Im1 4 0 R >> >> /Contents 5 0 R >>`));
+ obj(4,()=>{add(`<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jb.length} >>\nstream\n`);add(jb);add('\nendstream')});
+ const cs=`q ${pw.toFixed(2)} 0 0 ${ph.toFixed(2)} 0 0 cm /Im1 Do Q`;obj(5,()=>add(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+ const xref=len;let x='xref\n0 6\n0000000000 65535 f \n';for(let i=1;i<=5;i++)x+=String(offs[i]).padStart(10,'0')+' 00000 n \n';add(x+`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+ return new Blob(parts,{type:'application/pdf'})}
+async function shareReceiptImage(s,kind){try{const c=receiptCanvas(s);const base=`Receipt-${String(s.no).replace(/[^\w-]+/g,'')}`;
+ const png=await new Promise(r=>c.toBlob(r,'image/png')),jpg=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));const pdf=await jpegToPdf(jpg,c.width,c.height,80);
+ const file=kind==='img'?new File([png],base+'.png',{type:'image/png'}):new File([pdf],base+'.pdf',{type:'application/pdf'});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Receipt '+s.no,text:`${S.settings.storeName} · Receipt ${s.no} · ₱${money(s.total)}`});return}
+ let copied=false;try{if(window.ClipboardItem&&navigator.clipboard?.write){await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);copied=true}}catch(e){}
+ const u=URL.createObjectURL(file);const a=document.createElement('a');a.href=u;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
+ toast(`Saved ${file.name} in Downloads — attach it in Viber / Messenger${copied?'. The picture is also copied: click in the chat and press Ctrl+V (Mac ⌘V)':''}`,'ok')}catch(e){if(e&&e.name==='AbortError')return;toast('Could not share — '+(e.message||e),'warn')}}
 
 /* ========= PHOTO CLEAN (quick + AI) ========= */
 function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('Image could not be read'));i.src=src})}
