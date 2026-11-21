@@ -284,7 +284,7 @@ const DB={db:null,
  clear(){return this.rq(this.st('readwrite').clear())}};
 
 const CFG=(()=>{try{return JSON.parse(localStorage.getItem('tpos_cfg')||'{}')}catch(e){return{}}})();
-const aiKey=()=>CFG.aiKey||'';const APP_VER='64';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
+const aiKey=()=>CFG.aiKey||'';const APP_VER='65';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
 function saveCfg(){try{localStorage.setItem('tpos_cfg',JSON.stringify(CFG))}catch(e){}}
 if(!CFG.dev){CFG.dev=Math.random().toString(36).slice(2,4).toUpperCase();saveCfg()}
 
@@ -1723,6 +1723,14 @@ function receiptFinder(){const own=isOwner();let q='',days=30;const m=modal(`<di
  g('#rf_l').onclick=e=>{const tr=e.target.closest('[data-id]');if(tr)showReceipt(S.sales.get(tr.dataset.id))};draw();setTimeout(()=>g('#rf_q').focus(),100)}
 function txWire(){const qi=$('#tx_q');if(!qi)return;const rk=S.rr||'today',br=S.rbr||'all';const[from,to]=range(rk);const sales=[...S.sales.values()].filter(s=>s.ts>=from&&s.ts<to&&(br==='all'||s.branch===br));const tf=txFilter(sales),lim=S.txAll?5000:300;const nn=$('#tx_n');if(nn)nn.innerHTML=`${tf.length} receipt${tf.length===1?'':'s'}${S.txq?' match "'+esc(S.txq)+'"':''}${tf.length>lim?` · showing ${lim} newest <button class="link small" onclick="S.txAll=1;go('reports')">show all</button>`:''}${S.txq?` · <button class="link small" onclick="S.txq='';go('reports')">clear</button>`:''}`;qi.onchange=()=>{if(S.txq===qi.value)return;S.txq=qi.value;setTimeout(()=>go('reports'))};qi.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();qi.blur()}}}
 {const _rv=VIEWS.reports;VIEWS.reports=function(){_rv.apply(this,arguments);txWire()}}
+/* ========= TAP-TO-RETYPE: tapping a filled box clears it for new input; old value shows faintly and comes back if nothing is typed ========= */
+(function(){const SKIP=/^(checkbox|radio|file|date|datetime-local|month|time|color|range|button|submit|hidden|password)$/;
+ const ok=el=>el&&el.tagName==='INPUT'&&!SKIP.test(el.type)&&!el.readOnly&&!el.disabled&&!el.closest('[data-keep]')&&!el.hasAttribute('data-keep');
+ const back=el=>{if(el._rt&&!el._rt.ed&&el.value==='')el.value=el._rt.v;if(el._rt)el.placeholder=el._rt.ph;el._rt=null};
+ document.addEventListener('focusin',e=>{const el=e.target;if(!ok(el)||el.value==='')return;el._rt={v:el.value,ph:el.placeholder,ed:false};el.placeholder=el.value;el.value=''},true);
+ document.addEventListener('input',e=>{const el=e.target;if(el._rt)el._rt.ed=true},true);
+ document.addEventListener('keydown',e=>{const el=e.target;if(!el._rt||el._rt.ed)return;if(e.key==='Backspace'||e.key==='Delete'){el._rt.ed=true;return}if(e.key==='Enter'||e.key==='Tab'){el.value=el._rt.v;el._rt.ed=true}},true);
+ document.addEventListener('blur',e=>{if(e.target._rt)back(e.target)},true);})();
 (async function boot(){try{await DB.open()}catch(e){document.body.innerHTML='<p style="padding:20px">This browser blocks local storage (private mode?). Open in Safari/Chrome normally.</p>';return}
  const recs=await DB.boot();recs.forEach(applyRec);if(!S.branches.size){await seed()}recomputeStock();
  S.branch=S.branches.has(CFG.branch)?CFG.branch:mainBranch().id;showLogin();
