@@ -284,7 +284,7 @@ const DB={db:null,
  clear(){return this.rq(this.st('readwrite').clear())}};
 
 const CFG=(()=>{try{return JSON.parse(localStorage.getItem('tpos_cfg')||'{}')}catch(e){return{}}})();
-const aiKey=()=>CFG.aiKey||'';const APP_VER='65';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
+const aiKey=()=>CFG.aiKey||'';const APP_VER='66';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
 function saveCfg(){try{localStorage.setItem('tpos_cfg',JSON.stringify(CFG))}catch(e){}}
 if(!CFG.dev){CFG.dev=Math.random().toString(36).slice(2,4).toUpperCase();saveCfg()}
 
@@ -807,7 +807,7 @@ function editProduct(id,preset={}){if(!isOwner())return toast('Owner only','bad'
   catch(err){toast(err.message,'bad')}finally{b.disabled=false;b.textContent='✨ AI'}};
  g('#ep_name').addEventListener('change',()=>{if(!g('#ep_brand').value.trim()){const b=guessBrand(g('#ep_name').value);if(b)g('#ep_brand').value=b}if(!g('#ep_cat').value.trim()){const c=guessCat(g('#ep_name').value);if(c){g('#ep_cat').value=c;skuPrev()}}});const skuPrev=()=>{g('#ep_sku').placeholder=g('#ep_name').value.trim()?'Auto: '+autoSku({name:g('#ep_name').value,cat:g('#ep_cat').value,brand:g('#ep_brand').value},p.id):'Blank = auto'};['#ep_name','#ep_cat','#ep_brand'].forEach(s=>g(s).addEventListener('input',skuPrev));skuPrev();
  g('#ep_auto').onclick=()=>{if(!g('#ep_name').value.trim())return toast('Enter the name first','warn');g('#ep_sku').value=autoSku({name:g('#ep_name').value,cat:g('#ep_cat').value,brand:g('#ep_brand').value},p.id)};
- const setPh=async f=>{if(!f)return;try{const r=await processPhoto(f,cleanOn());photoNew=r.url;g('#ep_pv').innerHTML=`<img src="${photoNew}">`;closeImgWin();if(cleanOn()&&!r.cleaned)toast('Busy background — tap AI to remove it','warn')}catch(e){toast(e.message,'bad')}};
+ const setPh=async f=>{if(!f)return;try{const r=await processPhoto(f,cleanOn());photoNew=r.url;g('#ep_pv').innerHTML=`<img src="${photoNew}">`;closeImgWin();if(cleanOn()&&!r.cleaned)toast('Busy background — photo kept as is. For a clean white background, retake the item on a plain white or light surface.','warn')}catch(e){toast(e.message,'bad')}};
  
  g('#ep_file').onchange=e=>setPh(e.target.files[0]);dropZone(g('#ep_ph'),setPh);pasteTarget=setPh;m.onclose=()=>{pasteTarget=null;closeImgWin()};
  g('#ep_web').onclick=()=>{const n=g('#ep_name').value.trim();if(!n)return toast('Enter the name first','warn');webSearch(n)};g('#ep_paste').onclick=async()=>setPh(await clipImage());
