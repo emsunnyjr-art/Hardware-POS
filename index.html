@@ -284,7 +284,7 @@ const DB={db:null,
  clear(){return this.rq(this.st('readwrite').clear())}};
 
 const CFG=(()=>{try{return JSON.parse(localStorage.getItem('tpos_cfg')||'{}')}catch(e){return{}}})();
-const aiKey=()=>CFG.aiKey||'';const APP_VER='67';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
+const aiKey=()=>CFG.aiKey||'';const APP_VER='68';const AI_DEFAULT='gemini-3.8-flash';const aiModel=()=>{const m=CFG.aiModel||S.shared?.aiModel||AI_DEFAULT;return /^gemini-(1|2)\./.test(m)?AI_DEFAULT:m};
 function saveCfg(){try{localStorage.setItem('tpos_cfg',JSON.stringify(CFG))}catch(e){}}
 if(!CFG.dev){CFG.dev=Math.random().toString(36).slice(2,4).toUpperCase();saveCfg()}
 
@@ -1541,7 +1541,7 @@ function statementHTML(c){const st=S.settings,cs=custStats(c._v?{name:c.name}:c)
 /* ========= OPERATING COSTS (OPEX): salaries, rent, utilities — owner only ========= */
 const OPEX_TYPES={salary:'Salary',rent:'Rent',util:'Utilities',other:'Other'};
 const opexCfg=()=>S.shared?.opex||{lines:[],days:26};
-const opexLineM=(l,days)=>r2(l.per==='day'?(+l.amt||0)*(+l.days||days||26):(+l.amt||0));
+const opexLineM=(l,days)=>r2(l.per==='day'?(+l.amt||0)*(+l.days||days||26):l.per==='week'?(+l.amt||0)*52/12:(+l.amt||0));
 function opexMonthly(br='all'){const c=opexCfg(),by={};let t=0;(c.lines||[]).forEach(l=>{if(br!=='all'&&l.branch&&l.branch!==br)return;const v=opexLineM(l,c.days);t+=v;by[l.type||'other']=(by[l.type||'other']||0)+v});return{total:r2(t),by,days:+c.days||26}}
 // markup needed to cover M per month when selling S per month: gross S*m/(1+m)=M → m=M/(S−M)
 const needMarkup=(M,S)=>S>M&&M>0?Math.ceil(M/(S-M)*100):null;
@@ -1558,7 +1558,7 @@ function opexCard(tot,prof,from,to,br){if(!isOwner())return'';const o=opexMonthl
  <tr><td>Markup needed at this pace just to break even</td><td class="n">${need===null?'<span class="pill bad">sales below costs</span>':`<b>${need}%</b>`}</td></tr></table>
  <p class="small" style="margin:8px 0 0">${need===null?`⚠ Sales are lower than monthly costs — no markup can cover it. Grow sales to at least ${peso(be||0)}/month or cut costs.`:ok?`✓ ${mk}% suggested markup covers costs at this pace (needs ${need}%). Every extra ₱100 sold adds about ${peso(100*mk/(100+mk))} profit.`:`⚠ ${mk}% suggested markup is <b>not enough</b> at this pace — needs ${need}%. Raise the target markup in Settings, or sell ${peso(be)}/month.`}${days<14?' <span class="mute">Few days of data — pace is a rough guess.</span>':''}</p></div>`}
 function opexEdit(){if(!isOwner())return toast('Owner only','warn');const c=JSON.parse(JSON.stringify(opexCfg()));c.lines=c.lines||[];c.days=+c.days||26;
- const m=modal(`<h3>Monthly costs (OPEX)</h3><p class="small mute">Salaries, rent, electricity, water, internet… Used in Reports for net profit and to check if your markup covers costs. Daily-rate staff × days open = monthly.</p>
+ const m=modal(`<h3>Monthly costs (OPEX)</h3><p class="small mute">Salaries, rent, electricity, water, internet… Used in Reports for net profit and to check if your markup covers costs. Per day × days open, per week × 4.33 = monthly.</p>
  <label style="max-width:220px">Days open per month<input id="ox_d" inputmode="numeric" value="${c.days}"></label><div id="ox_l"></div>
  <div class="row"><button class="btn sm" id="ox_add">＋ Add cost</button></div><p id="ox_sum" class="small" style="margin:10px 0"></p>
  <div class="row end"><button class="btn" data-close>Cancel</button><button class="btn primary" id="ox_ok">Save</button></div>`,'wide');const g=s=>m.querySelector(s);
@@ -1567,7 +1567,7 @@ function opexEdit(){if(!isOwner())return toast('Owner only','warn');const c=JSON
   m.querySelectorAll('[data-m]').forEach(e=>{const l=c.lines[+e.dataset.m];e.textContent=peso(opexLineM(l,c.days))+'/mo'})};
  const draw=()=>{const G='display:grid;gap:6px;grid-template-columns:1fr 1fr';g('#ox_l').innerHTML=c.lines.length?c.lines.map((l,i)=>`<div data-i="${i}" style="border:1px solid var(--line,#e5e5e5);border-radius:12px;padding:10px;margin:8px 0"><div class="row" style="gap:6px"><input class="grow" data-k="name" value="${esc(l.name||'')}" placeholder="e.g. Cashier, Store rent"><button class="btn icon sm" data-rm="${i}" title="Remove">${ic('x',14)}</button></div>
   <div style="${G};margin-top:6px"><select data-k="type">${Object.entries(OPEX_TYPES).map(([k,v])=>`<option value="${k}" ${l.type===k?'selected':''}>${v}</option>`).join('')}</select><select data-k="branch"><option value="">All branches</option>${branches().map(b=>`<option value="${b.id}" ${l.branch===b.id?'selected':''}>${esc(b.name)}</option>`).join('')}</select>
-  <input data-k="amt" inputmode="decimal" value="${l.amt||''}" placeholder="Amount ₱"><select data-k="per"><option value="month">per month</option><option value="day" ${l.per==='day'?'selected':''}>per day</option></select>
+  <input data-k="amt" inputmode="decimal" value="${l.amt||''}" placeholder="Amount ₱"><select data-k="per"><option value="month">per month</option><option value="day" ${l.per==='day'?'selected':''}>per day</option><option value="week" ${l.per==='week'?'selected':''}>per week</option></select>
   ${l.per==='day'?`<input data-k="days" inputmode="numeric" value="${l.days||''}" placeholder="days/mo (${c.days})" title="Days worked per month">`:''}</div><small class="mute" data-m="${i}"></small></div>`).join(''):'<p class="small mute">No costs yet — tap ＋ Add cost.</p>';sum()};
  g('#ox_l').addEventListener('input',e=>{const tr=e.target.closest('[data-i]');if(!tr)return;const l=c.lines[+tr.dataset.i],k=e.target.dataset.k;if(!k)return;l[k]=['amt','days'].includes(k)?num(e.target.value):e.target.value;if(k==='per')draw();else sum()});
  g('#ox_l').addEventListener('change',e=>{const tr=e.target.closest('[data-i]');if(!tr||e.target.tagName!=='SELECT')return;c.lines[+tr.dataset.i][e.target.dataset.k]=e.target.value;if(e.target.dataset.k==='per')draw();else sum()});
